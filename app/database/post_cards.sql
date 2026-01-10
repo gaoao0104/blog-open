@@ -1,0 +1,13 @@
+CREATE TABLE post_cards (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    post_id INT UNSIGNED NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NULL,
+    image_url VARCHAR(255) NULL,
+    link_url VARCHAR(255) NULL,
+    priority INT NOT NULL DEFAULT 0,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

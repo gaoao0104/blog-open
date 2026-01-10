@@ -1,0 +1,12 @@
+/app/config/config.php
+/public/uploads/*
+!/public/uploads/.gitkeep
+/public/debug_posts_*
+/public/migrate_cards_*
+.env
+*.log
+.DS_Store
+/.idea/
+/.vscode/
+/node_modules/
+/vendor/

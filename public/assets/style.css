@@ -1,0 +1,1361 @@
+:root {
+    /* macOS Colors */
+    --bg-gradient-start: #f5f5f7;
+    --bg-gradient-end: #e1e1e6;
+    --ink: #1d1d1f;
+    --ink-secondary: #86868b;
+    --accent: #007aff;
+    /* macOS Blue */
+    --accent-hover: #0062cc;
+    --accent-soft: rgba(0, 122, 255, 0.1);
+
+    /* Glassmorphism */
+    --glass-surface: rgba(255, 255, 255, 0.72);
+    /* Slightly more opaque for better contrast */
+    --glass-border: rgba(0, 0, 0, 0.08);
+    /* Darker border for clarity */
+    --glass-blur: 24px;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+    /* Softer, deeper shadow */
+    --radius-lg: 18px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+
+    /* Layout */
+    --container-width: 1100px;
+    --header-height: 60px;
+
+    --header-bg: rgba(255, 255, 255, 0.7);
+    --footer-bg: rgba(255, 255, 255, 0.5);
+
+    --tag-bg: rgba(0, 0, 0, 0.05);
+    --tag-cloud-bg: #fff;
+    --tag-border: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+    --bg-gradient-start: #1c1c1e;
+    --bg-gradient-end: #000000;
+    --ink: #f5f5f7;
+    --ink-secondary: #a1a1a6;
+    --accent: #0a84ff;
+    --accent-hover: #0071e3;
+    --accent-soft: rgba(10, 132, 255, 0.15);
+
+    --glass-surface: rgba(30, 30, 30, 0.72);
+    --glass-border: rgba(255, 255, 255, 0.1);
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    --header-bg: rgba(28, 28, 30, 0.72);
+    --footer-bg: rgba(28, 28, 30, 0.5);
+
+    --tag-bg: rgba(255, 255, 255, 0.1);
+    --tag-cloud-bg: rgba(255, 255, 255, 0.05);
+    /* Transparent white for cloud tags */
+    --tag-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--accent-hover);
+    text-decoration: none;
+}
+
+.container {
+    width: min(var(--container-width), 92%);
+    margin: 0 auto;
+    padding: 24px 0;
+}
+
+/* Header - Mac Toolbar Style */
+.site-header {
+    height: var(--header-height);
+    background: var(--header-bg);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    z-index: 100;
+}
+
+.site-header .container {
+    height: 100%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+}
+
+nav a {
+    margin-left: 24px;
+    font-size: 0.95rem;
+    color: var(--ink-secondary);
+    font-weight: 500;
+    padding: 6px 0;
+    position: relative;
+}
+
+nav a:hover,
+nav a.active {
+    color: var(--ink);
+}
+
+nav a.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 99px;
+}
+
+/* Forms & Inputs - iOS Style */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    /* Slightly tighter radius for inputs */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.8);
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) inset;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea.dragging {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(178, 74, 44, 0.2);
+    background: #fff7ef;
+}
+
+.search-form input {
+    width: 200px;
+    background: rgba(118, 118, 128, 0.12);
+    /* macOS search field gray */
+    border: none;
+    box-shadow: none;
+    color: var(--ink);
+}
+
+.search-form input:focus {
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+button,
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    /* consistent with inputs */
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+button:hover,
+.button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
+    text-decoration: none;
+}
+
+.button.ghost {
+    background: transparent;
+    color: var(--accent);
+    box-shadow: none;
+}
+
+.button.ghost:hover {
+    background: var(--accent-soft);
+}
+
+/* Cards & Glass Containers */
+.glass-panel {
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+/* Hero Section */
+.hero {
+    padding: 40px;
+    margin-bottom: 32px;
+    text-align: center;
+    /* Hero inherits glass styling later via class mixin or we add it here */
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 0 0 12px;
+    background: linear-gradient(135deg, #1d1d1f 0%, #4a4a4f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: var(--ink-secondary);
+    margin: 0;
+}
+
+/* Featured Section */
+.featured {
+    padding: 0;
+    /* Let children handle padding or overflow */
+    margin-bottom: 32px;
+    /* Make featured look like a "widget" */
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.featured-track {
+    position: relative;
+    height: 280px;
+    /* Fixed height (reduced by 30% from 400px) */
+    display: flex;
+    /* Horizontal alignment */
+    transition: transform 0.5s ease-in-out;
+    /* Smooth scrolling */
+}
+
+.featured-slide {
+    min-width: 100%;
+    /* Full width */
+    flex: 0 0 100%;
+    /* Ensure it does not shrink */
+    height: 100%;
+    position: relative;
+    /* Not absolute anymore relative to track? actually in flex they just sit next to each other */
+    opacity: 1;
+    /* Always visible, just out of view */
+    pointer-events: auto;
+    display: grid;
+    /* Keep internal grid layout if needed, or block */
+    overflow: hidden;
+}
+
+/* Featured Image Wrapper - Ensures fill */
+.featured-image-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.featured-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: none;
+}
+
+/* Recommendation Tag - Top Right */
+.featured-recommend-tag {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    left: auto;
+    background: rgba(255, 59, 48, 0.9);
+    /* Mac Red */
+    color: white;
+    padding: 4px 12px;
+    border-radius: 99px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.featured-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-right: 1px solid rgba(0, 0, 0, 0.05);
+    /* Divider if needed, but in slider maybe not */
+}
+
+/* Content - Bottom Left Overlay */
+.featured-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 60px 32px 24px;
+    /* Top padding for gradient transition */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: auto;
+    /* Allow auto height */
+    pointer-events: none;
+    /* Let clicks pass through to overlay */
+}
+
+/* Old Featured Header/Labels unused in Banner Mode */
+.featured-label {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--accent);
+    color: white;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.featured-label-red {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid #ff3b30;
+    color: #ff3b30;
+    font-size: 0.75rem;
+    border-radius: 4px;
+    line-height: 1.2;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.featured-header {
+    display: none;
+    /* Hide old labels if any */
+}
+
+.featured-content h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Full Clickable Overlay Link */
+.featured-overlay-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    /* Above image(1), below content(5) but content is pointer-events:none */
+}
+
+.featured-content h2 a {
+    color: #fff;
+    pointer-events: auto;
+    /* Restore clicks */
+    position: relative;
+    z-index: 6;
+}
+
+.featured-content h2 a:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+/* Hide Excerpt in Banner Mode */
+.featured-excerpt {
+    display: none;
+}
+
+/* Styling Meta for Overlay (Dark Background) */
+/* Styling Meta for Overlay (Dark Background) */
+.featured-content .meta {
+    display: flex;
+    /* Enforce flex layout */
+    align-items: center;
+    /* Align vertically */
+    gap: 12px;
+    flex-wrap: wrap;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    /* Reset margin */
+    font-size: 0.9rem;
+}
+
+.featured-content .meta a {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.featured-content .author {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.featured-content .author span {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.featured-content .avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.featured-content .verified-badge {
+    width: 16px;
+    height: 16px;
+    margin-left: 2px;
+}
+
+.featured-content .tags {
+    display: none;
+    /* Hide tags in banner to save space */
+}
+
+/* Dots positioning */
+.featured-dots {
+    position: absolute;
+    bottom: 20px;
+    right: 32px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+
+.featured-dots button {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: none;
+    transition: all 0.3s;
+}
+
+.featured-dots button.active {
+    background: var(--accent);
+    transform: scale(1.2);
+}
+
+/* Content Grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.posts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Auto grid! but list view usually better for blogs? User asked for "fixed size". Let's do a uniform grid. */
+    gap: 24px;
+}
+
+/* Post Card - Fixed Size */
+.post-card {
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 420px;
+    position: relative;
+    /* Context for stretched link */
+}
+
+.post-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.post-card>img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.post-card>div {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.post-card h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    line-height: 1.3;
+    /* Limit lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.post-card h2 a {
+    color: var(--ink);
+}
+
+.post-card h2 a:hover {
+    color: var(--accent);
+}
+
+/* Stretched Link Strategy */
+.post-card h2 a::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.meta {
+    font-size: 0.9rem;
+    color: var(--ink-secondary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    /* Center items vertically */
+    gap: 12px;
+    flex-wrap: wrap;
+    line-height: 1;
+    /* Reset line height for alignment */
+    position: relative;
+    /* Lift above card link */
+    z-index: 2;
+}
+
+.post-card>div>p:last-of-type {
+    font-size: 0.95rem;
+    color: var(--ink-secondary);
+    margin: 0 0 16px;
+    flex: 1;
+    /* Pushes tags down */
+
+    /* Limit text */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.tags {
+    margin-top: auto;
+    /* Push to bottom */
+    position: relative;
+    /* Lift above card link */
+    z-index: 2;
+}
+
+.tags a {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--tag-bg);
+    color: var(--ink-secondary);
+    border-radius: 6px;
+    font-size: 0.8rem;
+    margin-right: 6px;
+    margin-bottom: 4px;
+    transition: all 0.2s;
+}
+
+.tags a:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sidebar-card {
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.sidebar-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    /* Divider */
+}
+
+.sidebar-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-card li {
+    margin-bottom: 10px;
+}
+
+.sidebar-card li a {
+    display: block;
+    color: var(--ink);
+    padding: 4px 8px;
+    margin: 0 -8px;
+    border-radius: 6px;
+}
+
+.sidebar-card li a:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-cloud a {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--tag-cloud-bg);
+    border: 1px solid var(--tag-border);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--ink);
+}
+
+.tag-cloud a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Post Detail */
+.post-detail {
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 48px;
+}
+
+.post-detail .featured {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    margin: 24px 0 32px;
+    overflow: hidden;
+    position: static;
+    /* Reset glass container props if inherited */
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+.post-detail .featured img {
+    border-radius: var(--radius-md);
+    width: 100%;
+}
+
+.post-body {
+    font-size: 1.1rem;
+    line-height: 1.8;
+}
+
+.post-body h2 {
+    font-size: 1.8rem;
+    margin-top: 40px;
+}
+
+.post-body h3 {
+    font-size: 1.5rem;
+    margin-top: 32px;
+}
+
+/* Markdown Content Styling */
+/* Markdown Content Styling */
+ul,
+ol {
+    margin-left: 24px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+ul.nested,
+ol.nested {
+    margin-left: 40px;
+}
+
+.post-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+    margin: 24px 0;
+    display: block;
+    box-shadow: var(--shadow-sm);
+}
+
+code {
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+    font-size: 0.9em;
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 4px;
+    color: #cc2255;
+}
+
+/* Mac-style Code Window */
+.code-wrapper {
+    position: relative;
+    margin: 24px 0;
+    background: #282c34;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Window Header */
+.code-wrapper::before {
+    content: "";
+    display: block;
+    height: 32px;
+    background: #21252b;
+    border-bottom: 1px solid #181a1f;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+}
+
+/* Traffic Lights */
+.code-wrapper::after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ff5f56;
+    box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f;
+    z-index: 3;
+}
+
+pre {
+    margin: 0;
+    padding: 48px 16px 16px;
+    /* Top padding for header */
+    background: transparent;
+    border-radius: 0;
+    overflow-x: auto;
+    color: #abb2bf;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    border-radius: 0;
+}
+
+/* Language Label */
+.code-lang-tag {
+    position: absolute;
+    top: 8px;
+    /* Align vertically with button text */
+    right: 70px;
+    /* More space for copy button */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #abb2bf;
+    opacity: 0.6;
+    z-index: 4;
+    text-transform: uppercase;
+    pointer-events: none;
+}
+
+/* Copy Button */
+.code-copy-btn {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    z-index: 5;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    color: #abb2bf;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.code-wrapper:hover .code-copy-btn {
+    opacity: 1;
+}
+
+.code-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.code-copy-btn.copied {
+    background: #27c93f;
+    color: #fff;
+}
+
+
+
+blockquote {
+    border-left: 4px solid var(--accent);
+    margin: 24px 0;
+    padding: 8px 20px;
+    background: var(--accent-soft);
+    border-radius: 0 8px 8px 0;
+    color: var(--ink);
+    font-style: italic;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    /* For rounding */
+    border-spacing: 0;
+    margin: 24px 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+th {
+    background: rgba(0, 0, 0, 0.03);
+    font-weight: 600;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* Inline Checkbox Group */
+.inline-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.inline-check input[type="checkbox"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+}
+
+/* Admin/Table Styles */
+.admin-table {
+    width: 100%;
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--glass-border);
+}
+
+
+/* Author Row */
+.author {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.author span {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+/* Avatar */
+.avatar {
+    width: 1.8em;
+    /* Match text size relative */
+    height: 1.8em;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #e1e1e6;
+    color: var(--ink-secondary);
+    vertical-align: middle;
+}
+
+/* Verified Badge */
+.verified-badge {
+    color: var(--accent);
+    /* Blue tick for Mac style */
+    background: transparent;
+    font-size: 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2em;
+    height: 1.2em;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-left: 2px;
+    /* Slightly tighter gap */
+}
+
+/* Footer */
+.site-footer {
+    margin-top: 60px;
+    padding: 40px 0;
+    background: var(--footer-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    text-align: center;
+    color: var(--ink-secondary);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Post Wrapper (Grid Layout) */
+.post-wrapper {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 40px;
+    align-items: start;
+    position: relative;
+}
+
+/* Post TOC Container */
+.post-toc-container {
+    position: sticky;
+    top: calc(var(--header-height) + 24px);
+    max-height: calc(100vh - var(--header-height) - 48px);
+    overflow-y: auto;
+    padding-left: 20px;
+    border-left: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+.post-toc h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-secondary);
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+#toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#toc-list li {
+    margin-bottom: 8px;
+}
+
+#toc-list a {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--ink-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    line-height: 1.4;
+    padding: 2px 0;
+}
+
+#toc-list a:hover {
+    color: var(--accent);
+}
+
+#toc-list a.active {
+    color: var(--accent);
+    font-weight: 500;
+    padding-left: 8px;
+    /* Visual indicator */
+}
+
+/* Indentation for H3 (child items) */
+#toc-list li ul {
+    list-style: none;
+    padding-left: 16px;
+    margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .promo-banner {
+        padding: 40px 24px;
+    }
+
+    .promo-close {
+        position: static;
+        margin-top: 20px;
+        transform: none;
+    }
+
+    .promo-close:hover {
+        transform: scale(1.02);
+    }
+}
+
+/* Post Cards */
+.post-cards-container {
+    margin: 40px 0;
+    padding-top: 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.post-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    /* Larger cards */
+    gap: 20px;
+}
+
+.post-card-item {
+    display: flex;
+    flex-direction: column;
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: var(--ink);
+    aspect-ratio: 1 / 1;
+    /* Square module */
+}
+
+.post-card-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+}
+
+.post-card-item .card-image {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    background: #f5f5f7;
+    position: relative;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    /* Separator */
+}
+
+.post-card-item .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Ensure full image is visible */
+    transition: transform 0.5s ease;
+    /* Smoother zoom */
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 4px;
+    /* Optional: add breathing room */
+}
+
+.post-card-item:hover .card-image img {
+    transform: scale(1.08);
+    /* Slightly more zoom */
+}
+
+.post-card-item .card-info {
+    padding: 10px 12px;
+    background: var(--glass-surface);
+    /* Opaque-ish but glassy */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    flex-shrink: 0;
+    /* Don't shrink text area */
+    position: relative;
+    /* Normal flow */
+    width: 100%;
+    z-index: 2;
+}
+
+.post-card-item .card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 2px;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.post-card-item .card-desc {
+    font-size: 0.8rem;
+    color: var(--ink-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+/* Admin Card Manager Styles */
+.card-manager {
+    margin-top: 32px;
+    padding: 24px;
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+}
+
+.card-manager h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+}
+
+.card-list {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.admin-card-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    gap: 12px;
+}
+
+.admin-card-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    background: #eee;
+}
+
+.admin-card-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-card-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.admin-card-meta {
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+}
+
+.admin-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.card-manager-form {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 16px;
+}
+
+.card-manager-form h4 {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+}
+
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .post-wrapper {
+        display: block;
+    }
+
+    .post-toc-container {
+        display: none;
+        /* Hide sidebar TOC on smaller screens */
+    }
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .featured-slide {
+        grid-template-columns: 1fr;
+    }
+
+    .posts {
+        grid-template-columns: 1fr;
+        /* Stack on mobile */
+    }
+
+    /* Fixed height might need adjustment on mobile if image is stacked? */
+    .post-card {
+        height: auto;
+        /* Let it grow naturally on mobile */
+    }
+
+    .post-card>img {
+        height: 240px;
+        aspect-ratio: auto;
+    }
+}
+
+/* Mobile Header Optimization */
+@media (max-width: 768px) {
+    .search-form {
+        display: none !important;
+    }
+
+    .site-header .container {
+        padding: 0 16px;
+    }
+
+    nav a {
+        margin-left: 16px;
+    }
+
+    .logo {
+        white-space: nowrap;
+        margin-right: auto;
+    }
+
+    #theme-toggle {
+        margin-left: 8px !important;
+    }
+}
