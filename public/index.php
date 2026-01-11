@@ -14,6 +14,7 @@ require __DIR__ . '/../app/lib/Csrf.php';
 require __DIR__ . '/../app/lib/Auth.php';
 require __DIR__ . '/../app/lib/Summary.php';
 require __DIR__ . '/../app/lib/Settings.php';
+require __DIR__ . '/../app/lib/WeChat.php';
 
 require __DIR__ . '/../app/controllers/PublicController.php';
 require __DIR__ . '/../app/controllers/AuthController.php';
@@ -31,6 +32,51 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($path === '/' && $method === 'GET') {
     PublicController::home($pdo, $config);
+    return;
+}
+
+if ($path === '/api/home' && $method === 'GET') {
+    PublicController::apiHome($pdo, $config);
+    return;
+}
+
+if ($path === '/api/posts' && $method === 'GET') {
+    PublicController::apiPosts($pdo, $config);
+    return;
+}
+
+if (preg_match('#^/api/post/([^/]+)/comment$#', $path, $matches) && $method === 'POST') {
+    PublicController::submitCommentApi($pdo, $config, rawurldecode($matches[1]));
+    return;
+}
+
+if (preg_match('#^/api/post/([^/]+)$#', $path, $matches) && $method === 'GET') {
+    PublicController::apiPost($pdo, $config, rawurldecode($matches[1]));
+    return;
+}
+
+if ($path === '/api/categories' && $method === 'GET') {
+    PublicController::apiCategories($pdo, $config);
+    return;
+}
+
+if ($path === '/api/tags' && $method === 'GET') {
+    PublicController::apiTags($pdo, $config);
+    return;
+}
+
+if (preg_match('#^/api/category/([^/]+)$#', $path, $matches) && $method === 'GET') {
+    PublicController::apiCategory($pdo, $config, rawurldecode($matches[1]));
+    return;
+}
+
+if (preg_match('#^/api/tag/([^/]+)$#', $path, $matches) && $method === 'GET') {
+    PublicController::apiTag($pdo, $config, rawurldecode($matches[1]));
+    return;
+}
+
+if ($path === '/api/search' && $method === 'GET') {
+    PublicController::apiSearch($pdo, $config);
     return;
 }
 
@@ -76,6 +122,11 @@ if ($path === '/sitemap.xml' && $method === 'GET') {
 
 if ($path === '/robots.txt' && $method === 'GET') {
     PublicController::robots($config);
+    return;
+}
+
+if ($path === '/wechat/signature' && $method === 'GET') {
+    PublicController::wechatSignature($config);
     return;
 }
 
@@ -277,7 +328,27 @@ if ($path === '/admin/settings' && $method === 'GET') {
 }
 
 if ($path === '/admin/settings' && $method === 'POST') {
-    AdminController::updateSettings($pdo);
+    AdminController::updateSettings($pdo, $config);
+    return;
+}
+
+if ($path === '/admin/settings/hero' && $method === 'GET') {
+    AdminController::settingsHero($config);
+    return;
+}
+
+if ($path === '/admin/settings/hero' && $method === 'POST') {
+    AdminController::updateSettingsHero($pdo, $config);
+    return;
+}
+
+if ($path === '/admin/settings/admin-card' && $method === 'GET') {
+    AdminController::settingsAdminCard($config);
+    return;
+}
+
+if ($path === '/admin/settings/admin-card' && $method === 'POST') {
+    AdminController::updateSettingsAdminCard($pdo, $config);
     return;
 }
 
@@ -298,6 +369,11 @@ if ($path === '/admin/cards' && $method === 'GET') {
 
 if ($path === '/admin/stats' && $method === 'GET') {
     AdminController::stats($pdo, $config);
+    return;
+}
+
+if (str_starts_with($path, '/api/')) {
+    PublicController::apiNotFound();
     return;
 }
 

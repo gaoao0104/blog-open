@@ -39,12 +39,33 @@ final class AuthController
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
 
+        // Remember Me Logic
+        if (!empty($_POST['remember'])) {
+            $token = bin2hex(random_bytes(32));
+            // Store token in DB (overwriting any previous token)
+            $pdo->prepare('UPDATE users SET remember_token = ? WHERE id = ?')
+                ->execute([$token, $user['id']]);
+            
+            // Set cookie for 30 days
+            setcookie('remember_token', $token, time() + 3600 * 24 * 30, '/', '', false, true);
+        }
+
         redirect_to('/admin');
     }
 
     public static function logout(): void
     {
+        if (isset($_SESSION['user_id'])) {
+            global $pdo;
+            if ($pdo) {
+                // Clear token from DB
+                $pdo->prepare('UPDATE users SET remember_token = NULL WHERE id = ?')->execute([$_SESSION['user_id']]);
+            }
+        }
+        
         session_destroy();
+        // Clear cookie
+        setcookie('remember_token', '', time() - 3600, '/');
         redirect_to('/');
     }
 }

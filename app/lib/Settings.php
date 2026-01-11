@@ -14,12 +14,29 @@ final class Settings
         'show_nav_admin' => '1',
         'show_search_form' => '1',
         'show_hero' => '1',
+        'hero_mode' => 'text', // text or image
+        'hero_image_url' => '',
+        'favicon_url' => '',
+        'footer_copyright' => '',
+        // Admin Card Defaults
+        'admin_card_avatar' => '',
+        'admin_card_name' => '管理员',
+        'admin_card_bio' => '这里是站长简介/签名...',
+        'admin_card_badge' => '',
+        'social_icon_1' => '', 'social_link_1' => '',
+        'social_icon_2' => '', 'social_link_2' => '',
+        'social_icon_3' => '', 'social_link_3' => '',
+        'social_icon_4' => '', 'social_link_4' => '',
+        'show_admin_card' => '1',
+        // Sidebar Defaults
+        'show_sidebar_categories' => '1',
+        'show_sidebar_tags' => '1',
     ];
 
     public static function all(\PDO $pdo): array
     {
         $rows = $pdo->query('SELECT setting_key, setting_value FROM settings')->fetchAll();
-        $settings = self::DEFAULTS;
+        $settings = self::defaults(); // Use dynamic defaults
         foreach ($rows as $row) {
             $settings[$row['setting_key']] = $row['setting_value'];
         }
@@ -36,6 +53,8 @@ final class Settings
 
     public static function defaults(): array
     {
-        return self::DEFAULTS;
+        $defaults = self::DEFAULTS;
+        $defaults['footer_copyright'] = '© ' . date('Y') . ' Gaoao Blog';
+        return $defaults;
     }
 }

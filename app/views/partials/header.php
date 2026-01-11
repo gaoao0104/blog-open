@@ -25,6 +25,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title_tag) ?></title>
+    <?php if (!empty($settings['favicon_url'])): ?>
+        <link rel="icon" href="<?= e($settings['favicon_url']) ?>">
+    <?php endif; ?>
     <link rel="alternate" type="application/rss+xml" title="<?= e($site_name) ?> RSS Feed" href="/rss.xml">
     <?php if (!empty($meta_robots)): ?>
         <meta name="robots" content="<?= e($meta_robots) ?>">

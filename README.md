@@ -12,6 +12,11 @@
 - RSS 订阅（`/rss.xml`）
 - 访问统计与数据面板（`/stats.php`）
 
+## 项目主页
+项目主页用于展示系统的完整功能和视觉效果，可作为线上演示入口。
+- 线上演示地址：blog.gaoao.xin
+- 代码仓库主页：https://github.com/gaoao0104/blog-open
+
 ## 环境要求
 - PHP 8.1+
 - MySQL 5.7+ / 8.0+

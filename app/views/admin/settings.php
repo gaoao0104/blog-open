@@ -1,13 +1,19 @@
 <?php
-$title = '站点配置';
+$title = '站点配置 - 显示开关';
 require __DIR__ . '/../partials/admin-header.php';
 ?>
+
+<?php
+$active_tab = $active_tab ?? 'display';
+require __DIR__ . '/../partials/admin-settings-nav.php';
+?>
+
 <div class="card" style="max-width: 800px;">
     <div class="card-header">
-        <h2 class="card-title">站点配置</h2>
+        <h2 class="card-title">显示开关</h2>
     </div>
 
-    <form class="post-form" method="post" action="/admin/settings">
+    <form class="post-form" method="post" action="/admin/settings" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
         
         <div class="form-group">
@@ -19,16 +25,20 @@ require __DIR__ . '/../partials/admin-header.php';
             <label class="form-label">左上角标题</label>
             <input type="text" name="header_title" value="<?= e($settings['header_title'] ?? '') ?>" class="form-control">
         </div>
-        
-        <div class="flex gap-4 mb-4">
-            <div style="flex: 1;">
-                <label class="form-label">首页欢迎标题</label>
-                <input type="text" name="hero_title" value="<?= e($settings['hero_title'] ?? '') ?>" class="form-control">
+
+        <div class="form-group">
+            <label class="form-label">Favicon 图标</label>
+            <div style="display: flex; gap: 8px;">
+                 <input type="text" name="favicon_url" value="<?= e($settings['favicon_url'] ?? '') ?>" class="form-control" placeholder="输入图片地址" style="flex: 1;">
+                 <input type="file" name="favicon_file" accept=".ico,.png,.jpg,.jpeg,.gif" class="form-control" style="width: auto;">
             </div>
-            <div style="flex: 1;">
-                 <label class="form-label">首页副标题</label>
-                 <input type="text" name="hero_subtitle" value="<?= e($settings['hero_subtitle'] ?? '') ?>" class="form-control">
-            </div>
+            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">支持上传或输入 URL。建议上传 .ico 或 .png 格式。</small>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">页脚版权文案</label>
+            <input type="text" name="footer_copyright" value="<?= e($settings['footer_copyright'] ?? '') ?>" class="form-control">
+            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">留空则使用默认格式。</small>
         </div>
         
         <div style="background: var(--admin-bg); padding: 16px; border-radius: 8px; margin-bottom: 24px;">
@@ -53,6 +63,18 @@ require __DIR__ . '/../partials/admin-header.php';
                 <label class="inline-check flex items-center gap-2" style="cursor: pointer;">
                     <input type="checkbox" name="show_hero" <?= ($settings['show_hero'] ?? '1') === '1' ? 'checked' : '' ?>>
                     <span>显示欢迎模块</span>
+                </label>
+                <label class="inline-check flex items-center gap-2" style="cursor: pointer;">
+                    <input type="checkbox" name="show_admin_card" <?= ($settings['show_admin_card'] ?? '1') === '1' ? 'checked' : '' ?>>
+                    <span>显示管理员名片</span>
+                </label>
+                <label class="inline-check flex items-center gap-2" style="cursor: pointer;">
+                    <input type="checkbox" name="show_sidebar_categories" <?= ($settings['show_sidebar_categories'] ?? '1') === '1' ? 'checked' : '' ?>>
+                    <span>显示分类模块</span>
+                </label>
+                <label class="inline-check flex items-center gap-2" style="cursor: pointer;">
+                    <input type="checkbox" name="show_sidebar_tags" <?= ($settings['show_sidebar_tags'] ?? '1') === '1' ? 'checked' : '' ?>>
+                    <span>显示标签模块</span>
                 </label>
             </div>
         </div>

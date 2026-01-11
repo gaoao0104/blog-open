@@ -526,6 +526,10 @@ button:hover,
     align-items: start;
 }
 
+.content-grid.no-sidebar {
+    grid-template-columns: 1fr;
+}
+
 .posts {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1358,4 +1362,318 @@ tr:last-child td {
     #theme-toggle {
         margin-left: 8px !important;
     }
+}
+
+.share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 24px 0;
+}
+
+
+/* Auth / Login Page - Mac Style */
+.auth-card {
+    max-width: 380px;
+    margin: 8vh auto;
+    padding: 48px 40px;
+    background: var(--glass-surface);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: authSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Subtle gradient border/glow effect */
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.auth-card h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 32px;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--ink) 0%, var(--ink-secondary) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    text-align: left;
+}
+
+.auth-card label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-left: 4px;
+}
+
+.auth-card input {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    color: var(--ink);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02) inset;
+}
+
+.auth-card input:focus {
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    transform: scale(1.01);
+}
+
+.auth-card button {
+    margin-top: 16px;
+    width: 100%;
+    height: 52px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-radius: 14px;
+    background: var(--accent);
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-hover) 100%);
+    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    border: none;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-card button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.auth-card button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+@keyframes authSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Dark mode adjustments for Auth Card */
+[data-theme="dark"] .auth-card {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    background: rgba(30, 30, 35, 0.6);
+}
+
+[data-theme="dark"] .auth-card input {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--ink);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) inset;
+}
+
+[data-theme="dark"] .auth-card input:focus {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: var(--accent);
+}
+
+
+/* Custom Checkbox Style for Auth */
+.inline-check input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.inline-check input[type="checkbox"]:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.inline-check input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.inline-check:hover input[type="checkbox"] {
+    border-color: var(--accent);
+}
+
+[data-theme="dark"] .inline-check input[type="checkbox"] {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+
+
+/* Featured + Admin Grid */
+.featured-admin-grid {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+}
+
+.featured-admin-grid.is-single {
+    grid-template-columns: 1fr;
+}
+
+@media (max-width: 900px) {
+    .featured-admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Admin Card */
+.admin-card {
+    background: var(--glass-surface);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+    /* Match featured height */
+    justify-content: center;
+}
+
+.admin-card-avatar-wrapper {
+    position: relative;
+    margin-bottom: 16px;
+    width: 96px;
+    height: 96px;
+}
+
+.admin-card-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.admin-card-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    /* contrast background for starburst */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-card-badge svg,
+.admin-card-badge img {
+    width: 24px;
+    height: 24px;
+}
+
+.admin-card h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--ink);
+}
+
+.admin-card p {
+    font-size: 1rem;
+    color: var(--ink-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.admin-social-links {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.social-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.social-btn img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    opacity: 0.85;
+    transition: all 0.2s;
+}
+
+.social-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.social-btn:hover img {
+    opacity: 1;
+    /* Optional: verify if user wants invert on hover or just keep original color. 
+       Usually social icons are colored. I'll remove invert filter to keep their brand colors if they are colored images.
+       If they are black icons, they will stay black.
+    */
 }

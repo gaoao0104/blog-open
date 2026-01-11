@@ -112,11 +112,26 @@ require __DIR__ . '/partials/header.php';
         <div class="post-body">
             <?= Markdown::render($post['content_md']) ?>
         </div>
+        <?php
+            $share_url = url_for($config, '/post/' . $post['slug']);
+            $share_title = $post['title'] ?? '';
+            $share_text = $meta_description;
+            $share_image = !empty($post['featured_image']) ? url_for($config, $post['featured_image']) : '';
+            $share_url_q = rawurlencode($share_url);
+            $share_title_q = rawurlencode($share_title);
+            $share_text_q = rawurlencode($share_text);
+            $share_image_q = rawurlencode($share_image);
+            $wechat_enabled = !empty($config['wechat_app_id']) && !empty($config['wechat_app_secret']);
+        ?>
         <div class="share">
             <span>分享：</span>
+            <button type="button" class="button ghost" id="share-system">系统分享</button>
             <button type="button" class="button ghost" id="share-copy">复制链接</button>
-            <a class="button ghost" target="_blank" rel="noopener" href="https://service.weibo.com/share/share.php?url=<?= e(url_for($config, '/post/' . $post['slug'])) ?>&title=<?= e($post['title']) ?>">微博</a>
-            <a class="button ghost" target="_blank" rel="noopener" href="https://connect.qq.com/widget/shareqq/index.html?url=<?= e(url_for($config, '/post/' . $post['slug'])) ?>&title=<?= e($post['title']) ?>">QQ</a>
+            <button type="button" class="button ghost" id="share-wechat">微信分享</button>
+            <button type="button" class="button ghost" id="share-qq">QQ分享</button>
+            <a class="button ghost" target="_blank" rel="noopener" href="https://service.weibo.com/share/share.php?url=<?= e($share_url_q) ?>&title=<?= e($share_title_q) ?>&pic=<?= e($share_image_q) ?>">微博</a>
+            <a class="button ghost" target="_blank" rel="noopener" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=<?= e($share_url_q) ?>&title=<?= e($share_title_q) ?>&summary=<?= e($share_text_q) ?>&pics=<?= e($share_image_q) ?>">QQ空间</a>
+            <a class="button ghost" target="_blank" rel="noopener" href="https://t.me/share/url?url=<?= e($share_url_q) ?>&text=<?= e($share_title_q) ?>">Telegram</a>
         </div>
         
         <!-- Post Cards Section -->
@@ -216,18 +231,135 @@ require __DIR__ . '/partials/header.php';
 </section>
 
 <?php require __DIR__ . '/partials/footer.php'; ?>
+<script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 <script>
-    const copyBtn = document.getElementById('share-copy');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', async () => {
-            const url = '<?= e(url_for($config, '/post/' . $post['slug'])) ?>';
-            try {
-                await navigator.clipboard.writeText(url);
-                copyBtn.textContent = '已复制';
-                setTimeout(() => copyBtn.textContent = '复制链接', 1500);
-            } catch (error) {
-                window.prompt('复制链接', url);
+    (function() {
+        const shareUrl = <?= json_encode($share_url) ?>;
+        const shareTitle = <?= json_encode($share_title) ?>;
+        const shareText = <?= json_encode($share_text) ?>;
+        const shareImage = <?= json_encode($share_image) ?>;
+        const qqShareUrl = <?= json_encode('https://connect.qq.com/widget/shareqq/index.html?url=' . $share_url_q . '&title=' . $share_title_q . '&summary=' . $share_text_q . '&pics=' . $share_image_q) ?>;
+        const wechatEnabled = <?= json_encode($wechat_enabled) ?>;
+
+        const ua = navigator.userAgent.toLowerCase();
+        const isWeChat = ua.includes('micromessenger');
+        const isQQ = ua.includes(' qq/') || ua.includes('mqqbrowser') || ua.includes('qqbrowser');
+
+        const copyBtn = document.getElementById('share-copy');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(shareUrl);
+                    copyBtn.textContent = '已复制';
+                    setTimeout(() => copyBtn.textContent = '复制链接', 1500);
+                } catch (error) {
+                    window.prompt('复制链接', shareUrl);
+                }
+            });
+        }
+
+        const systemBtn = document.getElementById('share-system');
+        if (systemBtn) {
+            if (navigator.share) {
+                systemBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.share({
+                            title: shareTitle,
+                            text: shareText,
+                            url: shareUrl,
+                        });
+                    } catch (error) {
+                        // ignore
+                    }
+                });
+            } else {
+                systemBtn.style.display = 'none';
             }
-        });
-    }
+        }
+
+        const wechatBtn = document.getElementById('share-wechat');
+        if (wechatBtn) {
+            if (!wechatEnabled || !isWeChat) {
+                wechatBtn.style.display = 'none';
+            } else {
+                wechatBtn.addEventListener('click', () => {
+                    window.alert('请点击右上角分享');
+                });
+            }
+        }
+
+        if (wechatEnabled && isWeChat && window.wx) {
+            const cleanUrl = window.location.href.split('#')[0];
+            fetch(`/wechat/signature?url=${encodeURIComponent(cleanUrl)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data || !data.signature) {
+                        if (wechatBtn) wechatBtn.style.display = 'none';
+                        return;
+                    }
+                    window.wx.config({
+                        debug: false,
+                        appId: data.appId,
+                        timestamp: data.timestamp,
+                        nonceStr: data.nonceStr,
+                        signature: data.signature,
+                        jsApiList: ['updateAppMessageShareData', 'updateTimelineShareData'],
+                    });
+                    window.wx.ready(() => {
+                        window.wx.updateAppMessageShareData({
+                            title: shareTitle,
+                            desc: shareText,
+                            link: shareUrl,
+                            imgUrl: shareImage,
+                        });
+                        window.wx.updateTimelineShareData({
+                            title: shareTitle,
+                            link: shareUrl,
+                            imgUrl: shareImage,
+                        });
+                    });
+                    window.wx.error(() => {
+                        if (wechatBtn) wechatBtn.style.display = 'none';
+                    });
+                })
+                .catch(() => {
+                    if (wechatBtn) wechatBtn.style.display = 'none';
+                });
+        }
+
+        if (isQQ && window.mqq && window.mqq.data && typeof window.mqq.data.setShareInfo === 'function') {
+            window.mqq.data.setShareInfo({
+                title: shareTitle,
+                desc: shareText,
+                share_url: shareUrl,
+                image_url: shareImage,
+            });
+        }
+
+        const qqBtn = document.getElementById('share-qq');
+        if (qqBtn) {
+            qqBtn.addEventListener('click', () => {
+                if (window.mqq) {
+                    if (window.mqq.ui && typeof window.mqq.ui.showShareMenu === 'function') {
+                        window.mqq.ui.showShareMenu();
+                        return;
+                    }
+                    if (typeof window.mqq.invoke === 'function') {
+                        window.mqq.invoke('ui', 'shareMessage', {
+                            title: shareTitle,
+                            desc: shareText,
+                            share_url: shareUrl,
+                            image_url: shareImage,
+                        });
+                        return;
+                    }
+                }
+                if (navigator.share) {
+                    navigator.share({ title: shareTitle, text: shareText, url: shareUrl }).catch(() => {});
+                    return;
+                }
+                window.open(qqShareUrl, '_blank', 'noopener');
+            });
+        }
+    })();
 </script>

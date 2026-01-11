@@ -288,6 +288,8 @@ final class AdminController
                 $imagePath
             ]);
             
+
+            
             header('Content-Type: application/json; charset=utf-8');
             echo json_encode(['status' => 'ok']);
         } catch (\PDOException $e) {
@@ -345,13 +347,29 @@ final class AdminController
     {
         Auth::requireLogin();
         $data = self::readJsonBody();
-        $id = (int)($data['id'] ?? 0);
+        $id = (int)($data['id'] ?? $_POST['id'] ?? 0);
+        $csrfToken = $data['csrf_token'] ?? $_POST['csrf_token'] ?? null;
+
+        header('Content-Type: application/json; charset=utf-8');
+
+        if (!Csrf::verify($csrfToken)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'invalid_csrf'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
         
         if ($id > 0) {
-            $pdo->prepare("DELETE FROM featured_cards WHERE id = ?")->execute([$id]);
-            echo json_encode(['status' => 'ok']);
+            $stmt = $pdo->prepare('DELETE FROM featured_cards WHERE id = ?');
+            $stmt->execute([$id]);
+            if ($stmt->rowCount() === 0) {
+                http_response_code(404);
+                echo json_encode(['error' => 'not_found'], JSON_UNESCAPED_UNICODE);
+                return;
+            }
+            echo json_encode(['status' => 'ok'], JSON_UNESCAPED_UNICODE);
         } else {
-             echo json_encode(['error' => 'invalid_id']);
+            http_response_code(400);
+            echo json_encode(['error' => 'invalid_id'], JSON_UNESCAPED_UNICODE);
         }
     }
     
@@ -806,10 +824,45 @@ final class AdminController
             'config' => $config,
             'settings' => $settings,
             'csrf_token' => Csrf::token(),
+            'active_tab' => 'display',
         ]);
     }
 
-    public static function updateSettings(\PDO $pdo): void
+    public static function settingsHero(array $config): void
+    {
+        Auth::requireLogin();
+
+        $settings = Settings::defaults();
+        if (isset($GLOBALS['settings'])) {
+            $settings = array_merge($settings, $GLOBALS['settings']);
+        }
+
+        View::render('admin/settings-hero', [
+            'config' => $config,
+            'settings' => $settings,
+            'csrf_token' => Csrf::token(),
+            'active_tab' => 'hero',
+        ]);
+    }
+
+    public static function settingsAdminCard(array $config): void
+    {
+        Auth::requireLogin();
+
+        $settings = Settings::defaults();
+        if (isset($GLOBALS['settings'])) {
+            $settings = array_merge($settings, $GLOBALS['settings']);
+        }
+
+        View::render('admin/settings-admin-card', [
+            'config' => $config,
+            'settings' => $settings,
+            'csrf_token' => Csrf::token(),
+            'active_tab' => 'admin_card',
+        ]);
+    }
+
+    public static function updateSettings(\PDO $pdo, array $config): void
     {
         Auth::requireLogin();
 
@@ -818,16 +871,26 @@ final class AdminController
             redirect_to('/admin/settings');
         }
 
+        $faviconUrl = trim($_POST['favicon_url'] ?? '');
+        $uploaded = self::handleUpload($config, false, 'favicon_file');
+        if ($uploaded) {
+            $faviconUrl = $uploaded;
+        }
+
         $values = [
             'site_name' => trim($_POST['site_name'] ?? ''),
             'header_title' => trim($_POST['header_title'] ?? ''),
-            'hero_title' => trim($_POST['hero_title'] ?? ''),
-            'hero_subtitle' => trim($_POST['hero_subtitle'] ?? ''),
             'show_nav_home' => isset($_POST['show_nav_home']) ? '1' : '0',
             'show_nav_search' => isset($_POST['show_nav_search']) ? '1' : '0',
             'show_nav_admin' => isset($_POST['show_nav_admin']) ? '1' : '0',
             'show_search_form' => isset($_POST['show_search_form']) ? '1' : '0',
             'show_hero' => isset($_POST['show_hero']) ? '1' : '0',
+            'favicon_url' => $faviconUrl,
+            'footer_copyright' => trim($_POST['footer_copyright'] ?? ''),
+            'show_admin_card' => isset($_POST['show_admin_card']) ? '1' : '0',
+            // Sidebar
+            'show_sidebar_categories' => isset($_POST['show_sidebar_categories']) ? '1' : '0',
+            'show_sidebar_tags' => isset($_POST['show_sidebar_tags']) ? '1' : '0',
         ];
 
         Settings::setMany($pdo, $values);
@@ -835,6 +898,100 @@ final class AdminController
 
         flash('success', '站点配置已更新。');
         redirect_to('/admin/settings');
+    }
+
+    public static function updateSettingsHero(\PDO $pdo, array $config): void
+    {
+        Auth::requireLogin();
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/settings/hero');
+        }
+
+        $heroUrl = trim($_POST['hero_image_url'] ?? '');
+        if (isset($_FILES['hero_image_file']) && $_FILES['hero_image_file']['error'] !== UPLOAD_ERR_OK && $_FILES['hero_image_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $uploadErrors = [
+                UPLOAD_ERR_INI_SIZE => '文件大小超过服务器限制',
+                UPLOAD_ERR_FORM_SIZE => '文件大小超过表单限制',
+                UPLOAD_ERR_PARTIAL => '文件只有部分被上传',
+                UPLOAD_ERR_NO_TMP_DIR => '找不到临时文件夹',
+                UPLOAD_ERR_CANT_WRITE => '文件写入失败',
+                UPLOAD_ERR_EXTENSION => '文件上传被扩展程序停止',
+            ];
+            $errorCode = $_FILES['hero_image_file']['error'];
+            $errorMsg = $uploadErrors[$errorCode] ?? '未知错误';
+            flash('error', "欢迎图片上传失败：{$errorMsg} (代码 {$errorCode})");
+        }
+
+        $heroUploaded = self::handleUpload($config, false, 'hero_image_file');
+        if ($heroUploaded) {
+            $heroUrl = $heroUploaded;
+        }
+
+        $values = [
+            'hero_title' => trim($_POST['hero_title'] ?? ''),
+            'hero_subtitle' => trim($_POST['hero_subtitle'] ?? ''),
+            'hero_mode' => $_POST['hero_mode'] ?? 'text',
+            'hero_image_url' => $heroUrl,
+        ];
+
+        Settings::setMany($pdo, $values);
+        $GLOBALS['settings'] = Settings::all($pdo);
+
+        flash('success', '欢迎模块已更新。');
+        redirect_to('/admin/settings/hero');
+    }
+
+    public static function updateSettingsAdminCard(\PDO $pdo, array $config): void
+    {
+        Auth::requireLogin();
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/settings/admin-card');
+        }
+
+        $adminAvatarUrl = trim($_POST['admin_card_avatar'] ?? '');
+        $adminAvatarUploaded = self::handleUpload($config, false, 'admin_card_avatar_file');
+        if ($adminAvatarUploaded) {
+            $adminAvatarUrl = $adminAvatarUploaded;
+        }
+
+        $adminBadgeUrl = trim($_POST['admin_card_badge'] ?? '');
+        $adminBadgeUploaded = self::handleUpload($config, false, 'admin_card_badge_file');
+        if ($adminBadgeUploaded) {
+            $adminBadgeUrl = $adminBadgeUploaded;
+        }
+
+        $socialValues = [];
+        for ($i = 1; $i <= 4; $i++) {
+            $iconKey = "social_icon_{$i}";
+            $linkKey = "social_link_{$i}";
+            
+            $iconUrl = trim($_POST[$iconKey] ?? '');
+            $iconUploaded = self::handleUpload($config, false, "{$iconKey}_file");
+            if ($iconUploaded) {
+                $iconUrl = $iconUploaded;
+            }
+            
+            $socialValues[$iconKey] = $iconUrl;
+            $socialValues[$linkKey] = trim($_POST[$linkKey] ?? '');
+        }
+
+        $values = [
+            'admin_card_avatar' => $adminAvatarUrl,
+            'admin_card_name' => trim($_POST['admin_card_name'] ?? ''),
+            'admin_card_bio' => trim($_POST['admin_card_bio'] ?? ''),
+            'admin_card_badge' => $adminBadgeUrl,
+            ...$socialValues,
+        ];
+
+        Settings::setMany($pdo, $values);
+        $GLOBALS['settings'] = Settings::all($pdo);
+
+        flash('success', '管理员名片已更新。');
+        redirect_to('/admin/settings/admin-card');
     }
 
     public static function createUser(\PDO $pdo, array $config): void

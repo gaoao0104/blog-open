@@ -14,6 +14,9 @@ require __DIR__ . '/../partials/header.php';
             密码
             <input type="password" name="password" required>
         </label>
+        <label class="inline-check" style="margin-top: 8px; justify-content: center;">
+            <input type="checkbox" name="remember" value="1"> 记住我
+        </label>
         <button type="submit">登录</button>
     </form>
 </div>

@@ -23,6 +23,39 @@ $today = date('Y-m-d');
 $start7 = date('Y-m-d', strtotime('-6 days'));
 $start30 = date('Y-m-d', strtotime('-29 days'));
 
+function formatSourceName(?string $host): string
+{
+    $host = strtolower(trim((string)$host));
+    if ($host === '') {
+        return '直接访问';
+    }
+    if (str_contains($host, 'google.')) {
+        return 'Google 搜索';
+    }
+    if (str_contains($host, 'bing.com')) {
+        return 'Bing 搜索';
+    }
+    if (str_contains($host, 'baidu.com')) {
+        return '百度搜索';
+    }
+    if (str_contains($host, 'sogou.com')) {
+        return '搜狗搜索';
+    }
+    if (str_contains($host, 'sm.cn')) {
+        return '神马搜索';
+    }
+    if (str_contains($host, 'yahoo.')) {
+        return 'Yahoo';
+    }
+    if (str_contains($host, 'duckduckgo.com')) {
+        return 'DuckDuckGo';
+    }
+    if (str_contains($host, 'yandex.')) {
+        return 'Yandex';
+    }
+    return $host;
+}
+
 $stmt = $pdo->prepare('SELECT COUNT(*) FROM site_analytics WHERE visit_date = ?');
 $stmt->execute([$today]);
 $todayPv = (int)$stmt->fetchColumn();
@@ -35,13 +68,25 @@ $stmt = $pdo->prepare('SELECT COUNT(*) FROM site_analytics WHERE visit_date >= ?
 $stmt->execute([$start7]);
 $pv7 = (int)$stmt->fetchColumn();
 
+$stmt = $pdo->prepare('SELECT COUNT(DISTINCT ip_address) FROM site_analytics WHERE visit_date >= ?');
+$stmt->execute([$start7]);
+$uv7 = (int)$stmt->fetchColumn();
+
 $stmt = $pdo->prepare('SELECT COUNT(*) FROM site_analytics WHERE visit_date >= ?');
 $stmt->execute([$start30]);
 $pv30 = (int)$stmt->fetchColumn();
 
+$stmt = $pdo->prepare('SELECT COUNT(DISTINCT ip_address) FROM site_analytics WHERE visit_date >= ?');
+$stmt->execute([$start30]);
+$uv30 = (int)$stmt->fetchColumn();
+
 $topStmt = $pdo->prepare('SELECT p.id, p.title, COUNT(sa.id) AS pv, COUNT(DISTINCT sa.ip_address) AS uv FROM site_analytics sa INNER JOIN posts p ON p.id = sa.post_id WHERE sa.visit_date >= ? AND sa.post_id <> 0 GROUP BY sa.post_id, p.title ORDER BY pv DESC LIMIT 10');
 $topStmt->execute([$start30]);
 $topPosts = $topStmt->fetchAll();
+
+$sourceStmt = $pdo->prepare('SELECT IFNULL(referrer_host, \'\') AS referrer_host, COUNT(*) AS pv, COUNT(DISTINCT ip_address) AS uv FROM site_analytics WHERE visit_date >= ? GROUP BY referrer_host ORDER BY pv DESC LIMIT 10');
+$sourceStmt->execute([$start30]);
+$sourceRows = $sourceStmt->fetchAll();
 
 $trendStmt = $pdo->prepare('SELECT visit_date, COUNT(*) AS pv FROM site_analytics WHERE visit_date >= ? GROUP BY visit_date ORDER BY visit_date ASC');
 $trendStmt->execute([$start30]);
@@ -80,12 +125,12 @@ require __DIR__ . '/../app/views/partials/admin-header.php';
             <div style="font-size: 1.6rem; font-weight: 600; margin-top: 4px;"><?= e((string)$todayPv) ?> / <?= e((string)$todayUv) ?></div>
         </div>
         <div class="card" style="padding: 16px;">
-            <div style="color: var(--admin-text-secondary); font-size: 0.85rem;">近 7 天总 PV</div>
-            <div style="font-size: 1.6rem; font-weight: 600; margin-top: 4px;"><?= e((string)$pv7) ?></div>
+            <div style="color: var(--admin-text-secondary); font-size: 0.85rem;">近 7 天总 PV / UV</div>
+            <div style="font-size: 1.6rem; font-weight: 600; margin-top: 4px;"><?= e((string)$pv7) ?> / <?= e((string)$uv7) ?></div>
         </div>
         <div class="card" style="padding: 16px;">
-            <div style="color: var(--admin-text-secondary); font-size: 0.85rem;">近 30 天总 PV</div>
-            <div style="font-size: 1.6rem; font-weight: 600; margin-top: 4px;"><?= e((string)$pv30) ?></div>
+            <div style="color: var(--admin-text-secondary); font-size: 0.85rem;">近 30 天总 PV / UV</div>
+            <div style="font-size: 1.6rem; font-weight: 600; margin-top: 4px;"><?= e((string)$pv30) ?> / <?= e((string)$uv30) ?></div>
         </div>
     </div>
 </div>
@@ -116,6 +161,38 @@ require __DIR__ . '/../app/views/partials/admin-header.php';
                             <td><?= e($post['title']) ?></td>
                             <td><?= e((string)$post['pv']) ?></td>
                             <td><?= e((string)$post['uv']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card mb-6">
+    <div class="card-header">
+        <h2 class="card-title">流量来源 (近 30 天)</h2>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>来源</th>
+                    <th>PV</th>
+                    <th>UV</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($sourceRows)): ?>
+                    <tr>
+                        <td colspan="3">暂无数据</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($sourceRows as $source): ?>
+                        <tr>
+                            <td><?= e(formatSourceName($source['referrer_host'] ?? '')) ?></td>
+                            <td><?= e((string)($source['pv'] ?? 0)) ?></td>
+                            <td><?= e((string)($source['uv'] ?? 0)) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

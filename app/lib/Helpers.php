@@ -119,17 +119,41 @@ function track_page_view(int $post_id): void
         $ip = '0.0.0.0';
     }
 
+    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    if (is_string($referrer)) {
+        $referrer = trim($referrer);
+    } else {
+        $referrer = '';
+    }
+    if ($referrer !== '' && strlen($referrer) > 2048) {
+        $referrer = substr($referrer, 0, 2048);
+    }
+    $referrerHost = '';
+    if ($referrer !== '') {
+        $host = parse_url($referrer, PHP_URL_HOST);
+        if (is_string($host)) {
+            $referrerHost = strtolower($host);
+        }
+    }
+    $currentHost = $_SERVER['HTTP_HOST'] ?? '';
+    if ($referrerHost !== '' && $currentHost !== '' && strtolower($currentHost) === $referrerHost) {
+        $referrer = '';
+        $referrerHost = '';
+    }
+
     $pdo = $GLOBALS['pdo'] ?? null;
     if (!$pdo instanceof \PDO) {
         return;
     }
 
     try {
-        $stmt = $pdo->prepare('INSERT INTO site_analytics (post_id, ip_address, user_agent, visit_date, created_at) VALUES (?, ?, ?, ?, NOW())');
+        $stmt = $pdo->prepare('INSERT INTO site_analytics (post_id, ip_address, user_agent, referrer, referrer_host, visit_date, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
         $stmt->execute([
             $post_id,
             $ip,
             $ua,
+            $referrer,
+            $referrerHost,
             date('Y-m-d'),
         ]);
     } catch (\Throwable $e) {
