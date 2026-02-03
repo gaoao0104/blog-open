@@ -121,6 +121,7 @@ require __DIR__ . '/partials/header.php';
             $share_title_q = rawurlencode($share_title);
             $share_text_q = rawurlencode($share_text);
             $share_image_q = rawurlencode($share_image);
+<<<<<<< HEAD
             $wechat_enabled = !empty($config['wechat_app_id']) && !empty($config['wechat_app_secret']);
         ?>
         <div class="share">
@@ -132,6 +133,96 @@ require __DIR__ . '/partials/header.php';
             <a class="button ghost" target="_blank" rel="noopener" href="https://service.weibo.com/share/share.php?url=<?= e($share_url_q) ?>&title=<?= e($share_title_q) ?>&pic=<?= e($share_image_q) ?>">微博</a>
             <a class="button ghost" target="_blank" rel="noopener" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=<?= e($share_url_q) ?>&title=<?= e($share_title_q) ?>&summary=<?= e($share_text_q) ?>&pics=<?= e($share_image_q) ?>">QQ空间</a>
             <a class="button ghost" target="_blank" rel="noopener" href="https://t.me/share/url?url=<?= e($share_url_q) ?>&text=<?= e($share_title_q) ?>">Telegram</a>
+=======
+            $share_settings = $settings ?? [];
+            $share_enabled = [
+                'system' => ($share_settings['share_enable_system'] ?? '1') === '1',
+                'copy' => ($share_settings['share_enable_copy'] ?? '1') === '1',
+                'wechat' => ($share_settings['share_enable_wechat'] ?? '1') === '1',
+                'qq' => ($share_settings['share_enable_qq'] ?? '1') === '1',
+                'weibo' => ($share_settings['share_enable_weibo'] ?? '1') === '1',
+                'qzone' => ($share_settings['share_enable_qzone'] ?? '1') === '1',
+                'telegram' => ($share_settings['share_enable_telegram'] ?? '1') === '1',
+            ];
+            $share_icons = [
+                'system' => $share_settings['share_icon_system'] ?? '',
+                'copy' => $share_settings['share_icon_copy'] ?? '',
+                'wechat' => $share_settings['share_icon_wechat'] ?? '',
+                'qq' => $share_settings['share_icon_qq'] ?? '',
+                'weibo' => $share_settings['share_icon_weibo'] ?? '',
+                'qzone' => $share_settings['share_icon_qzone'] ?? '',
+                'telegram' => $share_settings['share_icon_telegram'] ?? '',
+            ];
+            $wechat_configured = !empty($config['wechat_app_id']) && !empty($config['wechat_app_secret']);
+            $wechat_enabled = $wechat_configured && $share_enabled['wechat'];
+        ?>
+        <div class="share share-icons">
+            <span>分享：</span>
+            <?php if ($share_enabled['system']): ?>
+                <button type="button" class="share-icon" id="share-system" aria-label="系统分享">
+                    <?php if (!empty($share_icons['system'])): ?>
+                        <img src="<?= e($share_icons['system']) ?>" alt="系统分享">
+                    <?php else: ?>
+                        <span class="share-fallback">系统</span>
+                    <?php endif; ?>
+                </button>
+            <?php endif; ?>
+        <?php if ($share_enabled['copy']): ?>
+            <button type="button" class="share-icon" id="share-copy" aria-label="复制链接">
+                <?php if (!empty($share_icons['copy'])): ?>
+                    <img src="<?= e($share_icons['copy']) ?>" alt="复制链接">
+                <?php else: ?>
+                    <span class="share-fallback">复制</span>
+                <?php endif; ?>
+                <span class="share-feedback" aria-hidden="true">已复制</span>
+            </button>
+        <?php endif; ?>
+            <?php if ($share_enabled['wechat']): ?>
+                <button type="button" class="share-icon" id="share-wechat" aria-label="微信分享">
+                    <?php if (!empty($share_icons['wechat'])): ?>
+                        <img src="<?= e($share_icons['wechat']) ?>" alt="微信分享">
+                    <?php else: ?>
+                        <span class="share-fallback">微信</span>
+                    <?php endif; ?>
+                </button>
+            <?php endif; ?>
+            <?php if ($share_enabled['qq']): ?>
+                <button type="button" class="share-icon" id="share-qq" aria-label="QQ分享">
+                    <?php if (!empty($share_icons['qq'])): ?>
+                        <img src="<?= e($share_icons['qq']) ?>" alt="QQ分享">
+                    <?php else: ?>
+                        <span class="share-fallback">QQ</span>
+                    <?php endif; ?>
+                </button>
+            <?php endif; ?>
+            <?php if ($share_enabled['weibo']): ?>
+                <a class="share-icon share-link" target="_blank" rel="noopener" aria-label="微博分享" href="https://service.weibo.com/share/share.php?url=<?= e($share_url_q) ?>&title=<?= e($share_title_q) ?>&pic=<?= e($share_image_q) ?>">
+                    <?php if (!empty($share_icons['weibo'])): ?>
+                        <img src="<?= e($share_icons['weibo']) ?>" alt="微博分享">
+                    <?php else: ?>
+                        <span class="share-fallback">微博</span>
+                    <?php endif; ?>
+                </a>
+            <?php endif; ?>
+            <?php if ($share_enabled['qzone']): ?>
+                <a class="share-icon share-link" target="_blank" rel="noopener" aria-label="QQ空间" href="https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url=<?= e($share_url_q) ?>&title=<?= e($share_title_q) ?>&summary=<?= e($share_text_q) ?>&pics=<?= e($share_image_q) ?>">
+                    <?php if (!empty($share_icons['qzone'])): ?>
+                        <img src="<?= e($share_icons['qzone']) ?>" alt="QQ空间">
+                    <?php else: ?>
+                        <span class="share-fallback">QZ</span>
+                    <?php endif; ?>
+                </a>
+            <?php endif; ?>
+            <?php if ($share_enabled['telegram']): ?>
+                <a class="share-icon share-link" target="_blank" rel="noopener" aria-label="Telegram" href="https://t.me/share/url?url=<?= e($share_url_q) ?>&text=<?= e($share_title_q) ?>">
+                    <?php if (!empty($share_icons['telegram'])): ?>
+                        <img src="<?= e($share_icons['telegram']) ?>" alt="Telegram">
+                    <?php else: ?>
+                        <span class="share-fallback">TG</span>
+                    <?php endif; ?>
+                </a>
+            <?php endif; ?>
+>>>>>>> a3d11b8 (sync: update open-source release)
         </div>
         
         <!-- Post Cards Section -->
@@ -247,11 +338,28 @@ require __DIR__ . '/partials/header.php';
 
         const copyBtn = document.getElementById('share-copy');
         if (copyBtn) {
+<<<<<<< HEAD
             copyBtn.addEventListener('click', async () => {
                 try {
                     await navigator.clipboard.writeText(shareUrl);
                     copyBtn.textContent = '已复制';
                     setTimeout(() => copyBtn.textContent = '复制链接', 1500);
+=======
+            let copyTimer = null;
+            const showCopyFeedback = () => {
+                copyBtn.classList.add('is-copied');
+                if (copyTimer) {
+                    clearTimeout(copyTimer);
+                }
+                copyTimer = setTimeout(() => {
+                    copyBtn.classList.remove('is-copied');
+                }, 1500);
+            };
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(shareUrl);
+                    showCopyFeedback();
+>>>>>>> a3d11b8 (sync: update open-source release)
                 } catch (error) {
                     window.prompt('复制链接', shareUrl);
                 }

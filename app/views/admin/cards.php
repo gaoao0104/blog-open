@@ -320,4 +320,8 @@ require __DIR__ . '/../partials/admin-header.php';
     });
 })();
 </script>
+<<<<<<< HEAD
 <?php require __DIR__ . '/../partials/footer.php'; ?>
+=======
+<?php require __DIR__ . '/../partials/admin-footer.php'; ?>
+>>>>>>> a3d11b8 (sync: update open-source release)

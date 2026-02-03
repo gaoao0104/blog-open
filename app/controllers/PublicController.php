@@ -6,6 +6,10 @@ final class PublicController
 {
     public static function home(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
+=======
+        http_response_code(200);
+>>>>>>> a3d11b8 (sync: update open-source release)
         // Fetch Featured items from featured_cards table
         $featuredStmt = $pdo->prepare('
             SELECT 
@@ -548,7 +552,12 @@ final class PublicController
 
     public static function sitemap(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         $stmt = $pdo->query('SELECT slug, updated_at FROM posts WHERE status = \"published\" ORDER BY published_at DESC');
+=======
+        $stmt = $pdo->prepare('SELECT slug, updated_at FROM posts WHERE status = ? ORDER BY published_at DESC');
+        $stmt->execute(['published']);
+>>>>>>> a3d11b8 (sync: update open-source release)
         $posts = $stmt->fetchAll();
         $categories = $pdo->query('SELECT slug FROM categories ORDER BY name ASC')->fetchAll();
         $tags = $pdo->query('SELECT slug FROM tags ORDER BY name ASC')->fetchAll();

@@ -13,14 +13,44 @@ function base_url(array $config): string
         return rtrim($config['base_url'], '/');
     }
 
+<<<<<<< HEAD
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+=======
+    $scheme = 'http';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $proto = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'])[0]));
+        if ($proto === 'https' || $proto === 'http') {
+            $scheme = $proto;
+        }
+    } elseif (!empty($_SERVER['HTTP_CF_VISITOR'])) {
+        $decoded = json_decode($_SERVER['HTTP_CF_VISITOR'], true);
+        if (is_array($decoded) && isset($decoded['scheme'])) {
+            $scheme = $decoded['scheme'];
+        }
+    } elseif (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on') {
+        $scheme = 'https';
+    } elseif (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+        $scheme = 'https';
+    }
+
+    $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost';
+    if (str_contains($host, ',')) {
+        $host = trim(explode(',', $host)[0]);
+    }
+>>>>>>> a3d11b8 (sync: update open-source release)
 
     return $scheme . '://' . $host;
 }
 
 function url_for(array $config, string $path): string
 {
+<<<<<<< HEAD
+=======
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+>>>>>>> a3d11b8 (sync: update open-source release)
     return base_url($config) . $path;
 }
 

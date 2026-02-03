@@ -8,8 +8,19 @@ final class AdminController
     {
         Auth::requireLogin();
 
+<<<<<<< HEAD
         $stmt = $pdo->query('SELECT p.*, c.name AS category_name FROM posts p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.created_at DESC');
         $posts = $stmt->fetchAll();
+=======
+        if (Auth::hasPermission('posts.manage_all')) {
+            $stmt = $pdo->query('SELECT p.*, c.name AS category_name FROM posts p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.created_at DESC');
+            $posts = $stmt->fetchAll();
+        } else {
+            $stmt = $pdo->prepare('SELECT p.*, c.name AS category_name FROM posts p LEFT JOIN categories c ON p.category_id = c.id WHERE p.user_id = ? ORDER BY p.created_at DESC');
+            $stmt->execute([Auth::userId()]);
+            $posts = $stmt->fetchAll();
+        }
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         View::render('admin/dashboard', [
             'config' => $config,
@@ -19,10 +30,109 @@ final class AdminController
     
     public static function stats(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
         View::render('admin/stats', ['config' => $config]);
     }
 
+=======
+        Auth::requirePermission('stats.view');
+        View::render('admin/stats', ['config' => $config]);
+    }
+
+    public static function maintenance(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('maintenance.manage');
+        self::requireTestEnv($config);
+
+        $stats = [
+            'total_posts' => (int)$pdo->query('SELECT COUNT(*) FROM posts')->fetchColumn(),
+            'published_posts' => (int)$pdo->query("SELECT COUNT(*) FROM posts WHERE status = 'published'")->fetchColumn(),
+            'featured_posts' => (int)$pdo->query('SELECT COUNT(*) FROM posts WHERE is_featured = 1')->fetchColumn(),
+            'non_featured_posts' => (int)$pdo->query('SELECT COUNT(*) FROM posts WHERE is_featured = 0')->fetchColumn(),
+            'featured_cards' => 0,
+            'has_featured_cards' => false,
+        ];
+
+        $hasFeaturedCards = (bool)$pdo->query("SHOW TABLES LIKE 'featured_cards'")->fetchColumn();
+        if ($hasFeaturedCards) {
+            $stats['featured_cards'] = (int)$pdo->query('SELECT COUNT(*) FROM featured_cards')->fetchColumn();
+            $stats['has_featured_cards'] = true;
+        }
+
+        $posts = $pdo->query('SELECT id, title, is_featured, status FROM posts ORDER BY id DESC LIMIT 10')->fetchAll();
+        $cleanupLogs = [];
+        if (self::tableExists($pdo, 'r2_cleanup_logs')) {
+            $cleanupLogs = $pdo->query('SELECT * FROM r2_cleanup_logs ORDER BY created_at DESC LIMIT 20')->fetchAll();
+        }
+
+        View::render('admin/maintenance', [
+            'config' => $config,
+            'stats' => $stats,
+            'posts' => $posts,
+            'cleanup_logs' => $cleanupLogs,
+            'csrf_token' => Csrf::token(),
+        ]);
+    }
+
+    public static function migrateFeaturedCards(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('maintenance.manage');
+        self::requireTestEnv($config);
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/maintenance');
+        }
+
+        try {
+            $pdo->exec('CREATE TABLE IF NOT EXISTS featured_cards (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                post_id INT NULL,
+                title VARCHAR(255) NULL,
+                link_url VARCHAR(255) NULL,
+                image_url VARCHAR(255) NULL,
+                sort_order INT DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                INDEX (post_id),
+                INDEX (sort_order)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;');
+
+            $stmt = $pdo->query('SELECT id, featured_link_url, featured_card_image, featured_order, featured_at FROM posts WHERE is_featured = 1');
+            $posts = $stmt->fetchAll();
+
+            $insert = $pdo->prepare('INSERT INTO featured_cards (post_id, title, link_url, image_url, sort_order, created_at) VALUES (?, ?, ?, ?, ?, ?)');
+            $check = $pdo->prepare('SELECT id FROM featured_cards WHERE post_id = ? LIMIT 1');
+
+            $count = 0;
+            $skipped = 0;
+            foreach ($posts as $post) {
+                $check->execute([$post['id']]);
+                if ($check->fetch()) {
+                    $skipped++;
+                    continue;
+                }
+
+                $insert->execute([
+                    $post['id'],
+                    null,
+                    $post['featured_link_url'] ?: null,
+                    $post['featured_card_image'] ?: null,
+                    (int)($post['featured_order'] ?? 0),
+                    $post['featured_at'] ?: date('Y-m-d H:i:s'),
+                ]);
+                $count++;
+            }
+
+            flash('success', "迁移完成：新增 {$count} 条，跳过 {$skipped} 条。");
+        } catch (Throwable $e) {
+            flash('error', '迁移失败：' . $e->getMessage());
+        }
+
+        redirect_to('/admin/maintenance');
+    }
+
+>>>>>>> a3d11b8 (sync: update open-source release)
     public static function newPostForm(\PDO $pdo, array $config): void
     {
         Auth::requireLogin();
@@ -107,6 +217,10 @@ final class AdminController
     public static function editPostForm(\PDO $pdo, array $config, int $id): void
     {
         Auth::requireLogin();
+<<<<<<< HEAD
+=======
+        self::requirePostOwnerOrAdmin($pdo, $id);
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $stmt = $pdo->prepare('SELECT * FROM posts WHERE id = ?');
         $stmt->execute([$id]);
@@ -134,6 +248,10 @@ final class AdminController
     public static function updatePost(\PDO $pdo, array $config, int $id): void
     {
         Auth::requireLogin();
+<<<<<<< HEAD
+=======
+        self::requirePostOwnerOrAdmin($pdo, $id);
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -204,7 +322,11 @@ final class AdminController
 
     public static function featuredPosts(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         // Fetch Featured Cards (Joined with Posts for fallback data)
         // LEFT JOIN posts allows accessing post details if linked, but also supports cards without posts
@@ -260,7 +382,11 @@ final class AdminController
     // Create/Add Featured Item
     public static function addFeaturedItem(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
         $data = $_POST;
         
         $postId = !empty($data['post_id']) ? (int)$data['post_id'] : null;
@@ -302,7 +428,11 @@ final class AdminController
     // Update Featured Item
     public static function updateFeaturedItem(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
         $cardId = (int)($_POST['card_id'] ?? 0);
         if ($cardId <= 0) {
             echo json_encode(['error' => 'invalid_id']); return;
@@ -345,7 +475,11 @@ final class AdminController
     // Delete/Remove Featured Item
     public static function removeFeaturedItem(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
         $data = self::readJsonBody();
         $id = (int)($data['id'] ?? $_POST['id'] ?? 0);
         $csrfToken = $data['csrf_token'] ?? $_POST['csrf_token'] ?? null;
@@ -376,7 +510,11 @@ final class AdminController
     // Reorder
     public static function reorderFeaturedItems(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
         $data = self::readJsonBody();
         $order = $data['order'] ?? []; // Array of Card IDs
         
@@ -401,7 +539,11 @@ final class AdminController
 
     public static function featuredPage(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
         View::render('admin/featured', [
             'config' => $config,
             'csrf_token' => Csrf::token(),
@@ -410,7 +552,11 @@ final class AdminController
 
     public static function updateFeaturedMeta(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('featured.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $data = self::readJsonBody();
         $csrfToken = $_POST['csrf_token'] ?? $data['csrf_token'] ?? null;
@@ -497,8 +643,16 @@ final class AdminController
             return;
         }
 
+<<<<<<< HEAD
         $summary = Summary::generate($config, $content, 200);
         $error = Summary::lastError();
+=======
+        $summary = Summary::generate($config, $content, 50);
+        $error = Summary::lastError();
+        if ($summary !== '' && $error !== null) {
+            $error = null;
+        }
+>>>>>>> a3d11b8 (sync: update open-source release)
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode(['summary' => $summary, 'error' => $error], JSON_UNESCAPED_UNICODE);
     }
@@ -506,6 +660,10 @@ final class AdminController
     public static function deletePost(\PDO $pdo, int $id): void
     {
         Auth::requireLogin();
+<<<<<<< HEAD
+=======
+        self::requirePostOwnerOrAdmin($pdo, $id);
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $stmt = $pdo->prepare('DELETE FROM posts WHERE id = ?');
         $stmt->execute([$id]);
@@ -516,7 +674,11 @@ final class AdminController
 
     public static function categories(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('categories.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $categories = $pdo->query('SELECT * FROM categories ORDER BY name ASC')->fetchAll();
 
@@ -529,7 +691,11 @@ final class AdminController
 
     public static function createCategory(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('categories.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -552,7 +718,11 @@ final class AdminController
 
     public static function deleteCategory(\PDO $pdo, int $id): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('categories.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $stmt = $pdo->prepare('DELETE FROM categories WHERE id = ?');
         $stmt->execute([$id]);
@@ -563,7 +733,11 @@ final class AdminController
 
     public static function tags(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('tags.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $tags = $pdo->query('SELECT * FROM tags ORDER BY name ASC')->fetchAll();
 
@@ -576,7 +750,11 @@ final class AdminController
 
     public static function createTag(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('tags.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -599,7 +777,11 @@ final class AdminController
 
     public static function deleteTag(\PDO $pdo, int $id): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('tags.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $stmt = $pdo->prepare('DELETE FROM tags WHERE id = ?');
         $stmt->execute([$id]);
@@ -612,8 +794,19 @@ final class AdminController
     {
         Auth::requireLogin();
 
+<<<<<<< HEAD
         $stmt = $pdo->query('SELECT c.*, p.title AS post_title FROM comments c INNER JOIN posts p ON p.id = c.post_id ORDER BY c.created_at DESC');
         $comments = $stmt->fetchAll();
+=======
+        if (Auth::hasPermission('comments.manage_all')) {
+            $stmt = $pdo->query('SELECT c.*, p.title AS post_title FROM comments c INNER JOIN posts p ON p.id = c.post_id ORDER BY c.created_at DESC');
+            $comments = $stmt->fetchAll();
+        } else {
+            $stmt = $pdo->prepare('SELECT c.*, p.title AS post_title FROM comments c INNER JOIN posts p ON p.id = c.post_id WHERE p.user_id = ? ORDER BY c.created_at DESC');
+            $stmt->execute([Auth::userId()]);
+            $comments = $stmt->fetchAll();
+        }
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         View::render('admin/comments', [
             'config' => $config,
@@ -625,6 +818,10 @@ final class AdminController
     public static function approveComment(\PDO $pdo, int $id): void
     {
         Auth::requireLogin();
+<<<<<<< HEAD
+=======
+        self::requireCommentOwnerOrAdmin($pdo, $id);
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $stmt = $pdo->prepare('UPDATE comments SET status = ? WHERE id = ?');
         $stmt->execute(['approved', $id]);
@@ -636,6 +833,10 @@ final class AdminController
     public static function deleteComment(\PDO $pdo, int $id): void
     {
         Auth::requireLogin();
+<<<<<<< HEAD
+=======
+        self::requireCommentOwnerOrAdmin($pdo, $id);
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $stmt = $pdo->prepare('DELETE FROM comments WHERE id = ?');
         $stmt->execute([$id]);
@@ -646,7 +847,11 @@ final class AdminController
 
     public static function uploads(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('uploads.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $uploads = $pdo->query('SELECT * FROM uploads ORDER BY created_at DESC')->fetchAll();
 
@@ -659,7 +864,11 @@ final class AdminController
 
     public static function postCards(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('cards.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $postId = (int)($_GET['post_id'] ?? 0);
         if ($postId <= 0) {
@@ -679,7 +888,11 @@ final class AdminController
 
     public static function createPostCard(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('cards.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             http_response_code(400);
@@ -721,7 +934,11 @@ final class AdminController
 
     public static function updatePostCard(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('cards.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             http_response_code(400);
@@ -775,7 +992,11 @@ final class AdminController
 
     public static function deletePostCard(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('cards.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             http_response_code(400);
@@ -800,20 +1021,230 @@ final class AdminController
 
     public static function users(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
 
         $users = $pdo->query('SELECT id, username, nickname, avatar_url, is_verified, verified_badge_url, created_at FROM users ORDER BY created_at DESC')->fetchAll();
+=======
+        Auth::requirePermission('users.manage');
+
+        $users = $pdo->query('SELECT u.id, u.username, u.nickname, u.avatar_url, u.is_verified, u.verified_badge_url, u.role, u.group_id, u.created_at, g.name AS group_name, g.is_super AS group_is_super FROM users u LEFT JOIN admin_groups g ON g.id = u.group_id ORDER BY u.created_at DESC')->fetchAll();
+        $groups = $pdo->query('SELECT id, name, is_super FROM admin_groups ORDER BY is_super DESC, name ASC')->fetchAll();
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         View::render('admin/users', [
             'config' => $config,
             'users' => $users,
+<<<<<<< HEAD
+=======
+            'groups' => $groups,
+>>>>>>> a3d11b8 (sync: update open-source release)
             'csrf_token' => Csrf::token(),
         ]);
     }
 
+<<<<<<< HEAD
     public static function settings(array $config): void
     {
         Auth::requireLogin();
+=======
+    public static function groups(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('groups.manage');
+
+        $groups = $pdo->query('SELECT g.*, COUNT(u.id) AS user_count FROM admin_groups g LEFT JOIN users u ON u.group_id = g.id GROUP BY g.id ORDER BY g.is_super DESC, g.name ASC')->fetchAll();
+        $permRows = $pdo->query('SELECT group_id, perm_key FROM admin_group_permissions')->fetchAll();
+
+        $groupPermissions = [];
+        foreach ($permRows as $row) {
+            $groupPermissions[(int)$row['group_id']][] = $row['perm_key'];
+        }
+
+        View::render('admin/groups', [
+            'config' => $config,
+            'groups' => $groups,
+            'permissions' => self::permissionDefinitions(),
+            'group_permissions' => $groupPermissions,
+            'csrf_token' => Csrf::token(),
+        ]);
+    }
+
+    public static function createGroup(\PDO $pdo): void
+    {
+        Auth::requirePermission('groups.manage');
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/groups');
+        }
+
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $isSuper = isset($_POST['is_super']) ? 1 : 0;
+
+        if ($name === '') {
+            flash('error', '组名称不能为空。');
+            redirect_to('/admin/groups');
+        }
+
+        try {
+            $stmt = $pdo->prepare('INSERT INTO admin_groups (name, description, is_super, created_at) VALUES (?, ?, ?, NOW())');
+            $stmt->execute([$name, $description ?: null, $isSuper]);
+            flash('success', '分组已创建。');
+        } catch (\PDOException $e) {
+            flash('error', '创建失败：' . $e->getMessage());
+        }
+
+        redirect_to('/admin/groups');
+    }
+
+    public static function manageGroup(\PDO $pdo, array $config, int $id): void
+    {
+        Auth::requirePermission('groups.manage');
+
+        if ($id <= 0) {
+            flash('error', '无效的分组ID。');
+            redirect_to('/admin/groups');
+        }
+
+        $stmt = $pdo->prepare('SELECT * FROM admin_groups WHERE id = ?');
+        $stmt->execute([$id]);
+        $group = $stmt->fetch();
+
+        if (!$group) {
+            flash('error', '分组不存在。');
+            redirect_to('/admin/groups');
+        }
+
+        $permRows = $pdo->prepare('SELECT perm_key FROM admin_group_permissions WHERE group_id = ?');
+        $permRows->execute([$id]);
+        $selected = $permRows->fetchAll(\PDO::FETCH_COLUMN);
+
+        View::render('admin/group-manage', [
+            'config' => $config,
+            'group' => $group,
+            'permissions' => self::permissionDefinitions(),
+            'selected_permissions' => $selected,
+            'csrf_token' => Csrf::token(),
+        ]);
+    }
+
+    public static function updateGroupInfo(\PDO $pdo): void
+    {
+        Auth::requirePermission('groups.manage');
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/groups');
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $name = trim($_POST['name'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $isSuper = isset($_POST['is_super']) ? 1 : 0;
+
+        if ($id <= 0 || $name === '') {
+            flash('error', '分组信息不完整。');
+            redirect_to('/admin/groups');
+        }
+
+        $pdo->prepare('UPDATE admin_groups SET name = ?, description = ?, is_super = ? WHERE id = ?')
+            ->execute([$name, $description ?: null, $isSuper, $id]);
+
+        flash('success', '分组基本信息已更新。');
+        redirect_to('/admin/groups');
+    }
+
+    public static function updateGroupPermissions(\PDO $pdo): void
+    {
+        Auth::requirePermission('groups.manage');
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/groups');
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        $permissions = $_POST['permissions'] ?? [];
+
+        if ($id <= 0) {
+            flash('error', '无效的分组ID。');
+            redirect_to('/admin/groups');
+        }
+
+        // Check if group is super admin
+        $stmt = $pdo->prepare('SELECT is_super FROM admin_groups WHERE id = ?');
+        $stmt->execute([$id]);
+        $isSuper = (int)$stmt->fetchColumn();
+
+        $allowed = array_keys(self::permissionDefinitions());
+        $permissions = array_values(array_intersect($allowed, is_array($permissions) ? $permissions : []));
+
+        $pdo->prepare('DELETE FROM admin_group_permissions WHERE group_id = ?')->execute([$id]);
+        
+        // Only save permissions if not super admin (super admin has all implicitly)
+        // However, user might want to check them for visual feedback or future downgrades.
+        // But the original logic cleared them if super. Let's keep logic: if super, no explicit perms usually needed.
+        // But for consistency let's save them if passed, or just ignore. 
+        // The original logic was: IF super, disable checkboxes. So POST probably has empty permissions.
+        // Let's stick to: if not super, save perms.
+        
+        if (!$isSuper && !empty($permissions)) {
+            $insert = $pdo->prepare('INSERT INTO admin_group_permissions (group_id, perm_key) VALUES (?, ?)');
+            foreach ($permissions as $perm) {
+                $insert->execute([$id, $perm]);
+            }
+        }
+
+        flash('success', '权限配置已更新。');
+        redirect_to('/admin/groups/manage?id=' . $id);
+    }
+
+    public static function updateGroup(\PDO $pdo): void
+    {
+        // Legacy or Fallback
+        Auth::requirePermission('groups.manage');
+        self::updateGroupInfo($pdo);
+    }
+
+    public static function deleteGroup(\PDO $pdo): void
+    {
+        Auth::requirePermission('groups.manage');
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/groups');
+        }
+
+        $id = (int)($_POST['id'] ?? 0);
+        if ($id <= 0) {
+            flash('error', '分组不存在。');
+            redirect_to('/admin/groups');
+        }
+
+        $stmt = $pdo->prepare('SELECT is_super FROM admin_groups WHERE id = ?');
+        $stmt->execute([$id]);
+        if ((int)$stmt->fetchColumn() === 1) {
+            flash('error', '超级管理员组不能删除。');
+            redirect_to('/admin/groups');
+        }
+
+        $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE group_id = ?');
+        $stmt->execute([$id]);
+        if ((int)$stmt->fetchColumn() > 0) {
+            flash('error', '该分组下仍有用户，无法删除。');
+            redirect_to('/admin/groups');
+        }
+
+        $pdo->prepare('DELETE FROM admin_groups WHERE id = ?')->execute([$id]);
+        flash('success', '分组已删除。');
+        redirect_to('/admin/groups');
+    }
+
+    public static function settings(array $config): void
+    {
+        Auth::requirePermission('settings.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $settings = Settings::defaults();
         if (isset($GLOBALS['settings'])) {
@@ -830,7 +1261,11 @@ final class AdminController
 
     public static function settingsHero(array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('settings.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $settings = Settings::defaults();
         if (isset($GLOBALS['settings'])) {
@@ -847,7 +1282,11 @@ final class AdminController
 
     public static function settingsAdminCard(array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('settings.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $settings = Settings::defaults();
         if (isset($GLOBALS['settings'])) {
@@ -862,9 +1301,49 @@ final class AdminController
         ]);
     }
 
+<<<<<<< HEAD
     public static function updateSettings(\PDO $pdo, array $config): void
     {
         Auth::requireLogin();
+=======
+    public static function settingsShare(array $config): void
+    {
+        Auth::requirePermission('settings.manage');
+
+        $settings = Settings::defaults();
+        if (isset($GLOBALS['settings'])) {
+            $settings = array_merge($settings, $GLOBALS['settings']);
+        }
+
+        View::render('admin/settings-share', [
+            'config' => $config,
+            'settings' => $settings,
+            'csrf_token' => Csrf::token(),
+            'active_tab' => 'share',
+        ]);
+    }
+
+    public static function settingsMenu(array $config): void
+    {
+        Auth::requirePermission('settings.manage');
+
+        $settings = Settings::defaults();
+        if (isset($GLOBALS['settings'])) {
+            $settings = array_merge($settings, $GLOBALS['settings']);
+        }
+
+        View::render('admin/settings-menu', [
+            'config' => $config,
+            'settings' => $settings,
+            'csrf_token' => Csrf::token(),
+            'active_tab' => 'menu',
+        ]);
+    }
+
+    public static function updateSettings(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('settings.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -902,7 +1381,11 @@ final class AdminController
 
     public static function updateSettingsHero(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('settings.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -945,7 +1428,11 @@ final class AdminController
 
     public static function updateSettingsAdminCard(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('settings.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -994,9 +1481,102 @@ final class AdminController
         redirect_to('/admin/settings/admin-card');
     }
 
+<<<<<<< HEAD
     public static function createUser(\PDO $pdo, array $config): void
     {
         Auth::requireLogin();
+=======
+    public static function updateSettingsShare(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('settings.manage');
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/settings/share');
+        }
+
+        $items = ['system', 'copy', 'wechat', 'qq', 'weibo', 'qzone', 'telegram'];
+        $values = [];
+
+        foreach ($items as $key) {
+            $enableKey = 'share_enable_' . $key;
+            $iconKey = 'share_icon_' . $key;
+
+            $values[$enableKey] = isset($_POST[$enableKey]) ? '1' : '0';
+
+            $iconUrl = trim($_POST[$iconKey] ?? '');
+            $uploaded = self::handleUpload($config, false, $iconKey . '_file');
+            if ($uploaded) {
+                $iconUrl = $uploaded;
+            }
+            $values[$iconKey] = $iconUrl;
+        }
+
+        Settings::setMany($pdo, $values);
+        $GLOBALS['settings'] = Settings::all($pdo);
+
+        flash('success', '分享设置已更新。');
+        redirect_to('/admin/settings/share');
+    }
+
+    public static function updateSettingsMenu(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('settings.manage');
+
+        if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
+            flash('error', '请求已过期，请刷新后再试。');
+            redirect_to('/admin/settings/menu');
+        }
+
+        $fields = [
+            'admin_menu_title',
+            'admin_menu_title_icon',
+            'admin_menu_section_resources_label',
+            'admin_menu_section_system_label',
+            'admin_menu_dashboard_label',
+            'admin_menu_dashboard_icon',
+            'admin_menu_stats_label',
+            'admin_menu_stats_icon',
+            'admin_menu_write_label',
+            'admin_menu_write_icon',
+            'admin_menu_featured_label',
+            'admin_menu_featured_icon',
+            'admin_menu_categories_label',
+            'admin_menu_categories_icon',
+            'admin_menu_tags_label',
+            'admin_menu_tags_icon',
+            'admin_menu_uploads_label',
+            'admin_menu_uploads_icon',
+            'admin_menu_cards_label',
+            'admin_menu_cards_icon',
+            'admin_menu_comments_label',
+            'admin_menu_comments_icon',
+            'admin_menu_users_label',
+            'admin_menu_users_icon',
+            'admin_menu_groups_label',
+            'admin_menu_groups_icon',
+            'admin_menu_settings_label',
+            'admin_menu_settings_icon',
+            'admin_menu_maintenance_label',
+            'admin_menu_maintenance_icon',
+        ];
+
+        $values = [];
+        foreach ($fields as $field) {
+            $values[$field] = trim($_POST[$field] ?? '');
+        }
+
+        Settings::setMany($pdo, $values);
+        $GLOBALS['settings'] = Settings::all($pdo);
+
+        flash('success', '后台菜单已更新。');
+        redirect_to('/admin/settings/menu');
+    }
+
+    public static function createUser(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('users.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -1007,6 +1587,20 @@ final class AdminController
         $nickname = trim($_POST['nickname'] ?? '');
         $password = $_POST['password'] ?? '';
         $isVerified = isset($_POST['is_verified']) ? 1 : 0;
+<<<<<<< HEAD
+=======
+        $groupId = (int)($_POST['group_id'] ?? 0);
+        $groupRow = null;
+        if ($groupId > 0) {
+            $stmt = $pdo->prepare('SELECT id, is_super FROM admin_groups WHERE id = ?');
+            $stmt->execute([$groupId]);
+            $groupRow = $stmt->fetch();
+            if (!$groupRow) {
+                $groupId = 0;
+            }
+        }
+        $role = ($groupRow && (int)$groupRow['is_super'] === 1) ? 'admin' : 'editor';
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if ($username === '' || $password === '') {
             flash('error', '用户名和密码不能为空。');
@@ -1017,8 +1611,13 @@ final class AdminController
         $badge = self::handleUpload($config, false, 'badge_image');
         $hash = password_hash($password, PASSWORD_DEFAULT);
 
+<<<<<<< HEAD
         $stmt = $pdo->prepare('INSERT INTO users (username, nickname, password_hash, avatar_url, is_verified, verified_badge_url, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())');
         $stmt->execute([$username, $nickname ?: null, $hash, $avatar, $isVerified, $badge]);
+=======
+        $stmt = $pdo->prepare('INSERT INTO users (username, nickname, password_hash, avatar_url, is_verified, verified_badge_url, role, group_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())');
+        $stmt->execute([$username, $nickname ?: null, $hash, $avatar, $isVerified, $badge, $role, $groupId ?: null]);
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         flash('success', '用户已创建。');
         redirect_to('/admin/users');
@@ -1026,7 +1625,11 @@ final class AdminController
 
     public static function updateUser(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('users.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -1038,6 +1641,20 @@ final class AdminController
         $nickname = trim($_POST['nickname'] ?? '');
         $password = $_POST['password'] ?? '';
         $isVerified = isset($_POST['is_verified']) ? 1 : 0;
+<<<<<<< HEAD
+=======
+        $groupId = (int)($_POST['group_id'] ?? 0);
+        $groupRow = null;
+        if ($groupId > 0) {
+            $stmt = $pdo->prepare('SELECT id, is_super FROM admin_groups WHERE id = ?');
+            $stmt->execute([$groupId]);
+            $groupRow = $stmt->fetch();
+            if (!$groupRow) {
+                $groupId = 0;
+            }
+        }
+        $role = ($groupRow && (int)$groupRow['is_super'] === 1) ? 'admin' : 'editor';
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if ($id <= 0 || $username === '') {
             flash('error', '用户名不能为空。');
@@ -1047,7 +1664,22 @@ final class AdminController
         $avatar = self::handleUpload($config, false, 'avatar_image');
         $badge = self::handleUpload($config, false, 'badge_image');
 
+<<<<<<< HEAD
         $fields = ['username' => $username, 'nickname' => ($nickname ?: null), 'is_verified' => $isVerified];
+=======
+        if ($id === (int)($_SESSION['user_id'] ?? 0) && $role !== 'admin') {
+            flash('error', '不能将当前登录账号降为非管理员。');
+            redirect_to('/admin/users');
+        }
+
+        $fields = [
+            'username' => $username,
+            'nickname' => ($nickname ?: null),
+            'is_verified' => $isVerified,
+            'role' => $role,
+            'group_id' => $groupId ?: null,
+        ];
+>>>>>>> a3d11b8 (sync: update open-source release)
         if ($avatar) {
             $fields['avatar_url'] = $avatar;
         }
@@ -1076,7 +1708,11 @@ final class AdminController
 
     public static function deleteUser(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('users.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $id = (int)($_GET['id'] ?? 0);
 
@@ -1092,7 +1728,11 @@ final class AdminController
 
     public static function handleUploadRequest(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('uploads.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -1135,7 +1775,12 @@ final class AdminController
         if (!$path) {
             http_response_code(400);
             header('Content-Type: application/json; charset=utf-8');
+<<<<<<< HEAD
             echo json_encode(['error' => 'invalid_image'], JSON_UNESCAPED_UNICODE);
+=======
+            $error = $_SESSION['last_upload_error'] ?? 'invalid_image';
+            echo json_encode(['error' => $error], JSON_UNESCAPED_UNICODE);
+>>>>>>> a3d11b8 (sync: update open-source release)
             return;
         }
 
@@ -1155,7 +1800,11 @@ final class AdminController
 
     public static function updateUpload(\PDO $pdo): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('uploads.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         if (!Csrf::verify($_POST['csrf_token'] ?? null)) {
             flash('error', '请求已过期，请刷新后再试。');
@@ -1172,9 +1821,15 @@ final class AdminController
         redirect_to('/admin/uploads');
     }
 
+<<<<<<< HEAD
     public static function deleteUpload(\PDO $pdo): void
     {
         Auth::requireLogin();
+=======
+    public static function deleteUpload(\PDO $pdo, array $config): void
+    {
+        Auth::requirePermission('uploads.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         $id = (int)($_GET['id'] ?? 0);
         $stmt = $pdo->prepare('SELECT file_path FROM uploads WHERE id = ?');
@@ -1183,8 +1838,34 @@ final class AdminController
 
         if ($upload) {
             $path = $upload['file_path'];
+<<<<<<< HEAD
             if (str_starts_with($path, '/')) {
                 $fullPath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '/var/www/blog/public', '/') . $path;
+=======
+            $storageDriver = $config['storage_driver'] ?? 'local';
+            if ($storageDriver === 'r2') {
+                $r2 = new \R2Client($config['r2'] ?? []);
+                if ($r2->isConfigured()) {
+                    $key = $r2->keyFromUrl($path);
+                    if ($key) {
+                        $r2->deleteObject($key);
+                    }
+                }
+            }
+
+            $localPath = null;
+            if (str_starts_with($path, '/')) {
+                $localPath = $path;
+            } else {
+                $parsedPath = parse_url($path, PHP_URL_PATH);
+                if (is_string($parsedPath) && str_starts_with($parsedPath, '/uploads/')) {
+                    $localPath = $parsedPath;
+                }
+            }
+
+            if ($localPath) {
+                $fullPath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '/var/www/blog/public', '/') . $localPath;
+>>>>>>> a3d11b8 (sync: update open-source release)
                 if (is_file($fullPath)) {
                     @unlink($fullPath);
                 }
@@ -1206,6 +1887,66 @@ final class AdminController
         return is_array($data) ? $data : [];
     }
 
+<<<<<<< HEAD
+=======
+    private static function tableExists(\PDO $pdo, string $table): bool
+    {
+        $stmt = $pdo->prepare('SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?');
+        $stmt->execute([$table]);
+        return (bool)$stmt->fetchColumn();
+    }
+
+    private static function permissionDefinitions(): array
+    {
+        return [
+            'posts.manage_all' => '管理所有文章',
+            'comments.manage_all' => '管理所有评论',
+            'users.manage' => '管理后台用户',
+            'groups.manage' => '管理权限分组',
+            'settings.manage' => '管理站点设置',
+            'categories.manage' => '管理分类',
+            'tags.manage' => '管理标签',
+            'uploads.manage' => '管理素材库',
+            'featured.manage' => '管理推荐文章',
+            'cards.manage' => '管理卡片与推荐',
+            'stats.view' => '查看站点统计',
+            'maintenance.manage' => '执行维护操作',
+        ];
+    }
+
+    private static function requirePostOwnerOrAdmin(\PDO $pdo, int $postId): void
+    {
+        if (Auth::hasPermission('posts.manage_all')) {
+            return;
+        }
+
+        $stmt = $pdo->prepare('SELECT user_id FROM posts WHERE id = ?');
+        $stmt->execute([$postId]);
+        $ownerId = (int)($stmt->fetchColumn() ?: 0);
+
+        if ($ownerId !== Auth::userId()) {
+            flash('error', '当前账号无权限操作该文章。');
+            redirect_to('/admin');
+        }
+    }
+
+    private static function requireCommentOwnerOrAdmin(\PDO $pdo, int $commentId): void
+    {
+        if (Auth::hasPermission('comments.manage_all')) {
+            return;
+        }
+
+        $stmt = $pdo->prepare('SELECT p.user_id FROM comments c INNER JOIN posts p ON p.id = c.post_id WHERE c.id = ?');
+        $stmt->execute([$commentId]);
+        $ownerId = (int)($stmt->fetchColumn() ?: 0);
+
+        if ($ownerId !== Auth::userId()) {
+            flash('error', '当前账号无权限处理该评论。');
+            redirect_to('/admin/comments');
+        }
+    }
+
+>>>>>>> a3d11b8 (sync: update open-source release)
     private static function normalizeBool(mixed $value): ?int
     {
         if ($value === null) {
@@ -1224,6 +1965,18 @@ final class AdminController
         return $filtered ? 1 : 0;
     }
 
+<<<<<<< HEAD
+=======
+    private static function requireTestEnv(array $config): void
+    {
+        if (!($config['is_test'] ?? false)) {
+            http_response_code(404);
+            View::render('404', ['config' => $config]);
+            exit;
+        }
+    }
+
+>>>>>>> a3d11b8 (sync: update open-source release)
     private static function nextFeaturedOrder(\PDO $pdo): int
     {
         $row = $pdo->query('SELECT MAX(featured_order) AS max_order FROM posts WHERE is_featured = 1')->fetch();
@@ -1233,17 +1986,32 @@ final class AdminController
 
     private static function handleUpload(array $config, bool $required = false, string $field = 'featured_image'): ?string
     {
+<<<<<<< HEAD
         if (empty($_FILES[$field]) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
+=======
+        $_SESSION['last_upload_error'] = null;
+
+        if (empty($_FILES[$field]) || $_FILES[$field]['error'] === UPLOAD_ERR_NO_FILE) {
+            $_SESSION['last_upload_error'] = 'no_file';
+>>>>>>> a3d11b8 (sync: update open-source release)
             return $required ? null : null;
         }
 
         $file = $_FILES[$field];
 
         if ($file['error'] !== UPLOAD_ERR_OK) {
+<<<<<<< HEAD
+=======
+            $_SESSION['last_upload_error'] = 'upload_error_' . (string)$file['error'];
+>>>>>>> a3d11b8 (sync: update open-source release)
             return null;
         }
 
         if ($file['size'] > $config['max_upload_bytes']) {
+<<<<<<< HEAD
+=======
+            $_SESSION['last_upload_error'] = 'file_too_large';
+>>>>>>> a3d11b8 (sync: update open-source release)
             return null;
         }
 
@@ -1257,13 +2025,47 @@ final class AdminController
         ];
 
         if (!isset($allowed[$mime])) {
+<<<<<<< HEAD
+=======
+            $_SESSION['last_upload_error'] = 'invalid_mime_' . $mime;
+>>>>>>> a3d11b8 (sync: update open-source release)
             return null;
         }
 
         $name = bin2hex(random_bytes(12)) . '.' . $allowed[$mime];
+<<<<<<< HEAD
         $destination = rtrim($config['upload_dir'], '/') . '/' . $name;
 
         if (!move_uploaded_file($file['tmp_name'], $destination)) {
+=======
+        $storageDriver = $config['storage_driver'] ?? 'local';
+
+        if ($storageDriver === 'r2') {
+            $r2 = new \R2Client($config['r2'] ?? []);
+            if (!$r2->isConfigured()) {
+                $_SESSION['last_upload_error'] = 'r2_missing_config';
+                return null;
+            }
+            $body = file_get_contents($file['tmp_name']);
+            if ($body === false) {
+                $_SESSION['last_upload_error'] = 'file_read_failed';
+                return null;
+            }
+            $datePath = date('Y/m/d');
+            $key = $r2->buildObjectKey($datePath . '/' . $name);
+            if (!$r2->putObject($key, $body, $mime)) {
+                $_SESSION['last_upload_error'] = 'r2_upload_failed_' . $r2->lastError();
+                return null;
+            }
+            $_SESSION['last_upload_mime'] = $mime;
+            $_SESSION['last_upload_size'] = $file['size'];
+            return $r2->publicUrl($key);
+        }
+
+        $destination = rtrim($config['upload_dir'], '/') . '/' . $name;
+        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+            $_SESSION['last_upload_error'] = 'move_failed';
+>>>>>>> a3d11b8 (sync: update open-source release)
             return null;
         }
 
@@ -1301,7 +2103,11 @@ final class AdminController
 
     public static function cards(\PDO $pdo, array $config): void
     {
+<<<<<<< HEAD
         Auth::requireLogin();
+=======
+        Auth::requirePermission('cards.manage');
+>>>>>>> a3d11b8 (sync: update open-source release)
         
         $posts = $pdo->query('SELECT id, title FROM posts ORDER BY created_at DESC')->fetchAll();
         

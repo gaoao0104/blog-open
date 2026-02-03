@@ -38,6 +38,11 @@ final class AuthController
 
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
+<<<<<<< HEAD
+=======
+        $_SESSION['role'] = $user['role'] ?? 'admin';
+        $_SESSION['group_id'] = $user['group_id'] ?? null;
+>>>>>>> a3d11b8 (sync: update open-source release)
 
         // Remember Me Logic
         if (!empty($_POST['remember'])) {

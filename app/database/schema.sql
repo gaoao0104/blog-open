@@ -1,3 +1,21 @@
+<<<<<<< HEAD
+=======
+CREATE TABLE admin_groups (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255) NULL,
+    is_super TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE admin_group_permissions (
+    group_id INT UNSIGNED NOT NULL,
+    perm_key VARCHAR(80) NOT NULL,
+    PRIMARY KEY (group_id, perm_key),
+    FOREIGN KEY (group_id) REFERENCES admin_groups(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+>>>>>>> a3d11b8 (sync: update open-source release)
 CREATE TABLE users (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -6,7 +24,14 @@ CREATE TABLE users (
     avatar_url VARCHAR(255) NULL,
     is_verified TINYINT(1) NOT NULL DEFAULT 0,
     verified_badge_url VARCHAR(255) NULL,
+<<<<<<< HEAD
     created_at DATETIME NOT NULL
+=======
+    role VARCHAR(20) NOT NULL DEFAULT 'editor',
+    group_id INT UNSIGNED NULL,
+    created_at DATETIME NOT NULL,
+    FOREIGN KEY (group_id) REFERENCES admin_groups(id) ON DELETE SET NULL
+>>>>>>> a3d11b8 (sync: update open-source release)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE categories (

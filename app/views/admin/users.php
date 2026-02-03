@@ -1,6 +1,7 @@
 <?php
 $title = '用户管理';
 require __DIR__ . '/../partials/admin-header.php';
+<<<<<<< HEAD
 ?>
 <div class="card">
     <div class="card-header">
@@ -52,6 +53,26 @@ require __DIR__ . '/../partials/admin-header.php';
             </div>
         </form>
     </div>
+=======
+$groups = $groups ?? [];
+$defaultGroupId = 0;
+foreach ($groups as $group) {
+    if (empty($group['is_super'])) {
+        $defaultGroupId = (int)$group['id'];
+        break;
+    }
+}
+?>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h1 style="font-size: 1.5rem; font-weight: 600; color: var(--admin-text-primary);">用户管理</h1>
+    <button type="button" class="btn btn-primary" onclick="openCreateUserModal()">
+        <span style="margin-right: 6px;">+</span> 新建用户
+    </button>
+</div>
+
+<div class="card">
+    <!-- List starts here -->
+>>>>>>> a3d11b8 (sync: update open-source release)
 
     <div class="table-container">
         <table class="admin-table">
@@ -59,6 +80,10 @@ require __DIR__ . '/../partials/admin-header.php';
                 <tr>
                     <th style="width: 60px;">头像</th>
                     <th>用户名 / 昵称</th>
+<<<<<<< HEAD
+=======
+                    <th>分组</th>
+>>>>>>> a3d11b8 (sync: update open-source release)
                     <th>认证状态</th>
                     <th>创建时间</th>
                     <th class="text-right">操作</th>
@@ -81,6 +106,18 @@ require __DIR__ . '/../partials/admin-header.php';
                             <div style="font-size: 0.85rem; color: var(--admin-text-secondary);"><?= e($user['nickname'] ?? '-') ?></div>
                         </td>
                         <td>
+<<<<<<< HEAD
+=======
+                            <?php if (!empty($user['group_name'])): ?>
+                                <span class="badge <?= !empty($user['group_id']) && !empty($user['group_is_super']) ? 'badge-success' : 'badge-gray' ?>">
+                                    <?= e($user['group_name']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="badge badge-gray">未分组</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+>>>>>>> a3d11b8 (sync: update open-source release)
                             <div class="flex items-center gap-2">
                                 <?php if ($user['is_verified']): ?>
                                     <span class="badge badge-success">已认证</span>
@@ -104,6 +141,10 @@ require __DIR__ . '/../partials/admin-header.php';
                                 data-verified="<?= $user['is_verified'] ? '1' : '0' ?>"
                                 data-avatar="<?= e($user['avatar_url'] ?? '') ?>"
                                 data-badge="<?= e($user['verified_badge_url'] ?? '') ?>"
+<<<<<<< HEAD
+=======
+                                data-group="<?= e((string)($user['group_id'] ?? 0)) ?>"
+>>>>>>> a3d11b8 (sync: update open-source release)
                             >编辑</button>
                             <a href="/admin/users/delete?id=<?= e((string)$user['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('确定删除该用户吗?');">删除</a>
                         </td>
@@ -134,6 +175,21 @@ require __DIR__ . '/../partials/admin-header.php';
                 <label class="form-label">昵称</label>
                 <input type="text" name="nickname" id="edit-nickname" class="form-control">
             </div>
+<<<<<<< HEAD
+=======
+
+            <div class="form-group">
+                <label class="form-label">权限分组</label>
+                <select name="group_id" id="edit-group" class="form-control">
+                    <option value="0">不设置</option>
+                    <?php foreach ($groups as $group): ?>
+                        <option value="<?= e((string)$group['id']) ?>">
+                            <?= e($group['name']) ?><?= !empty($group['is_super']) ? '（超级）' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+>>>>>>> a3d11b8 (sync: update open-source release)
             
             <div class="form-group">
                 <label class="form-label">密码 (留空则不修改)</label>
@@ -206,6 +262,7 @@ require __DIR__ . '/../partials/admin-header.php';
     .close:hover { color: var(--admin-text); }
 </style>
 
+<<<<<<< HEAD
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('edit-user-modal');
@@ -216,6 +273,89 @@ document.addEventListener('DOMContentLoaded', () => {
     const idInput = document.getElementById('edit-id');
     const usernameInput = document.getElementById('edit-username');
     const nicknameInput = document.getElementById('edit-nickname');
+=======
+<!-- Create User Modal -->
+<div id="create-user-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>添加新用户</h3>
+            <span class="close" id="create-modal-close">&times;</span>
+        </div>
+        <form method="post" enctype="multipart/form-data" action="/admin/users/create">
+            <input type="hidden" name="csrf_token" value="<?= e($csrf_token) ?>">
+            
+            <div class="form-group">
+                <label class="form-label">用户名 <span style="color:red">*</span></label>
+                <input type="text" name="username" placeholder="用户名" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">密码 <span style="color:red">*</span></label>
+                <input type="password" name="password" placeholder="密码" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">昵称 (可选)</label>
+                <input type="text" name="nickname" placeholder="昵称" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">权限分组</label>
+                <select name="group_id" class="form-control">
+                    <option value="0">不设置</option>
+                    <?php foreach ($groups as $group): ?>
+                        <option value="<?= e((string)$group['id']) ?>" <?= $defaultGroupId === (int)$group['id'] ? 'selected' : '' ?>>
+                            <?= e($group['name']) ?><?= !empty($group['is_super']) ? '（超级）' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                 <label class="inline-check flex items-center gap-2" style="cursor: pointer;">
+                    <input type="checkbox" name="is_verified">
+                    <span style="font-weight: 500;">官方认证账号</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">头像</label>
+                <input type="file" name="avatar_image" accept="image/*" class="form-control" style="padding: 8px;">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">认证图标 (V标)</label>
+                <input type="file" name="badge_image" accept="image/*" class="form-control" style="padding: 8px;">
+            </div>
+            
+            <div class="form-actions text-right" style="margin-top: 24px;">
+                <button type="submit" class="btn btn-primary">创建用户</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCreateUserModal() {
+    document.getElementById('create-user-modal').style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Edit Modal Logic
+    const editModal = document.getElementById('edit-user-modal');
+    const editCloseBtn = document.getElementById('edit-modal-close');
+    const editBtns = document.querySelectorAll('.edit-user-btn');
+    
+    // Create Modal Logic
+    const createModal = document.getElementById('create-user-modal');
+    const createCloseBtn = document.getElementById('create-modal-close');
+    
+    // Form fields for Edit
+    const idInput = document.getElementById('edit-id');
+    const usernameInput = document.getElementById('edit-username');
+    const nicknameInput = document.getElementById('edit-nickname');
+    const groupInput = document.getElementById('edit-group');
+>>>>>>> a3d11b8 (sync: update open-source release)
     const verifiedCheck = document.getElementById('edit-verified');
     const avatarPrev = document.getElementById('current-avatar-preview');
     const badgePrev = document.getElementById('current-badge-preview');
@@ -227,6 +367,12 @@ document.addEventListener('DOMContentLoaded', () => {
              usernameInput.value = data.username;
              nicknameInput.value = data.nickname;
              verifiedCheck.checked = data.verified === '1';
+<<<<<<< HEAD
+=======
+             if (groupInput) {
+                 groupInput.value = data.group || '0';
+             }
+>>>>>>> a3d11b8 (sync: update open-source release)
              
              if (data.avatar) {
                  avatarPrev.innerHTML = `<img src="${data.avatar}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:1px solid var(--admin-border);"> <span style="font-size:0.8rem; color:var(--admin-text-secondary); margin-left:8px;">当前头像</span>`;
@@ -240,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  badgePrev.innerHTML = '';
              }
              
+<<<<<<< HEAD
              modal.style.display = 'block';
         });
     });
@@ -251,6 +398,27 @@ document.addEventListener('DOMContentLoaded', () => {
     window.onclick = function(event) {
         if (event.target == modal) {
             modal.style.display = "none";
+=======
+             editModal.style.display = 'block';
+        });
+    });
+    
+    // Close handlers
+    editCloseBtn.addEventListener('click', () => {
+        editModal.style.display = 'none';
+    });
+    
+    createCloseBtn.addEventListener('click', () => {
+        createModal.style.display = 'none';
+    });
+    
+    window.onclick = function(event) {
+        if (event.target == editModal) {
+            editModal.style.display = "none";
+        }
+        if (event.target == createModal) {
+            createModal.style.display = "none";
+>>>>>>> a3d11b8 (sync: update open-source release)
         }
     }
 });

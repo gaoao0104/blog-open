@@ -115,6 +115,7 @@ require __DIR__ . '/partials/header.php';
                         <div class="admin-card-avatar" style="background: #ddd;"></div>
                     <?php endif; ?>
                     
+<<<<<<< HEAD
                     <div class="admin-card-badge">
                         <?php if (!empty($settings['admin_card_badge'])): ?>
                             <img src="<?= e($settings['admin_card_badge']) ?>" alt="Verified">
@@ -125,6 +126,13 @@ require __DIR__ . '/partials/header.php';
                             </svg>
                         <?php endif; ?>
                     </div>
+=======
+                    <?php if (!empty($settings['admin_card_badge'])): ?>
+                        <div class="admin-card-badge">
+                            <img src="<?= e($settings['admin_card_badge']) ?>" alt="Verified">
+                        </div>
+                    <?php endif; ?>
+>>>>>>> a3d11b8 (sync: update open-source release)
                 </div>
                 <h3><?= e($settings['admin_card_name'] ?? '管理员') ?></h3>
                 <p><?= nl2br(e($settings['admin_card_bio'] ?? '')) ?></p>

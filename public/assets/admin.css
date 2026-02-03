@@ -112,6 +112,28 @@ body.admin-body {
     margin-right: 12px;
 }
 
+<<<<<<< HEAD
+=======
+.nav-link .icon .menu-icon-image,
+.logo .menu-icon-image {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    display: inline-block;
+}
+
+.logo .menu-icon-image {
+    width: 22px;
+    height: 22px;
+}
+
+.icon-text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+>>>>>>> a3d11b8 (sync: update open-source release)
 .sidebar-footer {
     padding: 16px;
     border-top: 1px solid var(--admin-border);

@@ -343,6 +343,10 @@ try {
                 </table>
             </div>
         </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> a3d11b8 (sync: update open-source release)
     </div>
 </div>
 
