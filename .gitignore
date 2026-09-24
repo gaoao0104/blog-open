@@ -3,6 +3,7 @@
 !/public/uploads/.gitkeep
 /public/debug_posts_*
 /public/migrate_cards_*
+/public/files/sub.txt*
 .env
 *.log
 .DS_Store
